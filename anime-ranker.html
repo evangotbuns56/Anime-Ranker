@@ -147,6 +147,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 input[type=text]{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;font-size:.875rem;font-family:inherit;outline:none;background:var(--surface);color:var(--text)}
 input[type=text]:focus{border-color:var(--accent)}
 .hidden{display:none!important}
+/* Resolve preview */
+.resolve-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
+.resolve-cover{width:32px;height:44px;border-radius:5px;object-fit:cover;background:var(--border);flex-shrink:0}
+.resolve-info{flex:1;min-width:0}
+.resolve-title{font-size:.875rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resolve-original{font-size:.72rem;color:var(--muted);margin-top:1px}
+.resolve-remove{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:0;flex-shrink:0}
+.resolve-remove:hover{color:var(--danger)}
+.resolve-fail{background:var(--bg);border:1px dashed var(--border);border-radius:10px;padding:9px 12px;margin-bottom:6px;font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:8px}
 /* Show detail */
 .show-hero{display:flex;gap:14px;padding:16px 14px}
 .show-cover{width:90px;height:128px;border-radius:10px;object-fit:cover;background:var(--border);flex-shrink:0}
@@ -279,8 +288,18 @@ input[type=text]:focus{border-color:var(--accent)}
     <div id="rv-input">
       <div class="rank-section">
         <div class="phase-lbl">Step 1 — Add your shows</div>
-        <textarea class="paste-area" id="pasteArea" placeholder="Paste one show per line…&#10;&#10;Hunter x Hunter&#10;FMA Brotherhood&#10;Vinland Saga"></textarea>
-        <button class="btn btn-accent" onclick="addFromPaste()" style="margin-top:10px">Add Shows</button>
+        <p class="hint" style="margin-bottom:10px">Paste your list — numbers, bullets, and abbreviations are handled automatically.</p>
+        <textarea class="paste-area" id="pasteArea" placeholder="1. JJK&#10;2. FMA&#10;3. HxH&#10;4. Vinland Saga&#10;5. Mob Psycho"></textarea>
+        <button class="btn btn-accent" onclick="smartResolve()" style="margin-top:10px" id="resolveBtn">Resolve Shows</button>
+      </div>
+      <!-- Preview of resolved shows -->
+      <div id="resolvePreview" class="hidden" style="margin:0 14px">
+        <div style="font-size:.82rem;color:var(--muted);margin-bottom:8px" id="resolveStatus"></div>
+        <div id="resolveList"></div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn btn-accent btn-sm" onclick="confirmResolve()">Add These Shows</button>
+          <button class="btn-outline btn-sm" onclick="hideEl('resolvePreview')" style="border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer">Back</button>
+        </div>
       </div>
       <div id="inputShowsCard" class="card hidden" style="margin:0 14px">
         <div class="card-pad" style="padding-bottom:8px">
@@ -410,8 +429,9 @@ input[type=text]:focus{border-color:var(--accent)}
     <div class="section-title">In these rankings</div>
     <div id="sdRankings" style="background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin:0 14px;overflow:hidden"></div>
     <div id="sdEmpty" class="empty-state hidden"><div class="icon">🔍</div><p>No one has ranked this show yet.</p></div>
-    <div style="padding:12px 14px">
-      <button class="btn-outline" style="width:100%;border-radius:10px;padding:9px;font-size:.875rem;font-weight:600;cursor:pointer" onclick="navTo('search')">← Back to Search</button>
+    <div style="padding:8px 14px 12px;display:flex;gap:8px">
+      <button class="btn btn-accent" style="flex:1;margin-top:0" id="sdAddBtn" onclick="addShowDetailToList()">+ Add to a List</button>
+      <button class="btn-outline" style="flex:1;border-radius:10px;padding:9px;font-size:.875rem;font-weight:600;cursor:pointer" onclick="navTo('search')">← Back</button>
     </div>
   </div>
 
@@ -772,10 +792,86 @@ function showRV(id){
   document.getElementById(id).classList.remove('hidden');
 }
 
+// Smart resolve: strip numbers/bullets, search AniList for each line
+let _resolvedShows=[];
+
+async function smartResolve(){
+  const text=document.getElementById('pasteArea').value.trim();
+  if(!text){toast('Paste some shows first.');return;}
+  const lines=text.split('\n').map(l=>l.replace(/^[\s\d#\.\)\-\*:]+/,'').trim()).filter(Boolean);
+  if(!lines.length){toast('No shows found in that text.');return;}
+
+  const btn=document.getElementById('resolveBtn');
+  btn.textContent='Resolving…';btn.disabled=true;
+  hideEl('resolvePreview');
+  _resolvedShows=[];
+
+  const status=document.getElementById('resolveStatus');
+  const list=document.getElementById('resolveList');
+  status.textContent=`Resolving ${lines.length} shows…`;
+  list.innerHTML='';
+  showEl('resolvePreview');
+
+  const gql=`query($s:String){Page(perPage:1){media(search:$s,type:ANIME,sort:SEARCH_MATCH){id title{english romaji}coverImage{medium}startDate{year}}}}`;
+
+  for(const original of lines){
+    try{
+      const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:gql,variables:{s:original}})});
+      const data=await r.json();
+      const m=data?.data?.Page?.media?.[0];
+      if(m){
+        const title=m.title.english||m.title.romaji;
+        const show={id:Math.random(),name:title,cover:m.coverImage?.medium||'',year:m.startDate?.year||''};
+        _resolvedShows.push({show,original,found:true});
+        list.innerHTML+=`<div class="resolve-row" id="rrow-${show.id}">
+          <img class="resolve-cover" src="${show.cover}" onerror="this.style.display='none'">
+          <div class="resolve-info">
+            <div class="resolve-title">${title}</div>
+            <div class="resolve-original">from: "${original}"</div>
+          </div>
+          <button class="resolve-remove" onclick="removeResolved(${show.id})" title="Remove">×</button>
+        </div>`;
+      } else {
+        _resolvedShows.push({original,found:false});
+        list.innerHTML+=`<div class="resolve-fail">⚠ Couldn't find: "${original}"</div>`;
+      }
+    }catch{
+      _resolvedShows.push({original,found:false});
+      list.innerHTML+=`<div class="resolve-fail">⚠ Error resolving: "${original}"</div>`;
+    }
+    // Small delay to avoid rate limiting
+    await new Promise(r=>setTimeout(r,120));
+  }
+
+  const found=_resolvedShows.filter(r=>r.found).length;
+  status.textContent=`Resolved ${found} of ${lines.length} shows — remove any that look wrong.`;
+  btn.textContent='Resolve Shows';btn.disabled=false;
+}
+
+function removeResolved(id){
+  _resolvedShows=_resolvedShows.filter(r=>!r.show||r.show.id!==id);
+  document.getElementById('rrow-'+id)?.remove();
+  const found=_resolvedShows.filter(r=>r.found).length;
+  document.getElementById('resolveStatus').textContent=`${found} show${found!==1?'s':''} ready to add.`;
+}
+
+function confirmResolve(){
+  const toAdd=_resolvedShows.filter(r=>r.found&&r.show);
+  if(!toAdd.length){toast('No shows to add.');return;}
+  toAdd.forEach(r=>{
+    if(!shows.find(s=>s.name.toLowerCase()===r.show.name.toLowerCase()))
+      shows.push(r.show);
+  });
+  document.getElementById('pasteArea').value='';
+  hideEl('resolvePreview');
+  renderChips();
+}
+
 function addFromPaste(){
+  // Fallback plain add (kept for compatibility)
   const text=document.getElementById('pasteArea').value.trim();
   if(!text)return;
-  text.split('\n').map(l=>l.trim()).filter(Boolean).forEach(name=>{
+  text.split('\n').map(l=>l.replace(/^[\s\d#\.\)\-\*:]+/,'').trim()).filter(Boolean).forEach(name=>{
     if(!shows.find(s=>s.name.toLowerCase()===name.toLowerCase()))shows.push({id:Math.random(),name});
   });
   document.getElementById('pasteArea').value='';
@@ -1042,6 +1138,16 @@ function copyResults(){
   navigator.clipboard.writeText(scored.map((s,i)=>`#${i+1} ${s.name} — ${s.score.toFixed(1)}/10`).join('\n')).then(()=>toast('Copied to clipboard!'));
 }
 
+// ─── Add show from detail page ──────────────────────────────
+let _sdShowName='';
+function addShowDetailToList(){
+  if(!currentUser){signIn();return;}
+  _sdShowName=document.getElementById('sdTitle').textContent;
+  navTo('addshow');
+  // After list loads, pre-fill the show name
+  window._prefilledShowName=_sdShowName;
+}
+
 // ─── Add show to existing list ──────────────────────────────
 let _editDocId=null, _editDocData=null, _addShowName='';
 
@@ -1070,9 +1176,11 @@ function pickListForAdd(docId,data){
   document.getElementById('addshow-pick').classList.add('hidden');
   document.getElementById('addshow-input').classList.remove('hidden');
   document.getElementById('addingToName').textContent=data.name||'Ranking';
-  document.getElementById('addShowSearchInput').value='';
+  const prefill=window._prefilledShowName||'';
+  document.getElementById('addShowSearchInput').value=prefill;
+  _addShowName=prefill;
+  window._prefilledShowName='';
   document.getElementById('addShowSearchResults').style.display='none';
-  _addShowName='';
 }
 
 let _addSearchTimer=null;

@@ -37,12 +37,25 @@ textarea:focus{border-color:var(--accent)}
 .vs-card{border:1.5px solid var(--border);border-radius:var(--radius);padding:22px 14px;cursor:pointer;text-align:center;font-size:.95rem;font-weight:600;transition:border-color .15s,background .15s;min-height:80px;display:flex;align-items:center;justify-content:center;line-height:1.4}
 .vs-card:hover{border-color:var(--accent);background:#f5f5ff}
 .vs-or{font-size:.8rem;color:var(--muted);text-align:center;font-weight:500}
-.cal-box{background:#f8f8ff;border:1px solid #d4d5f5;border-radius:var(--radius);padding:18px;margin-top:14px}
-.cal-lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
-.cal-q{font-size:.95rem;font-weight:600;margin-bottom:14px;line-height:1.4}
-.cal-btns{display:flex;gap:8px}
-.cal-btn{flex:1;border:1px solid var(--border);border-radius:8px;padding:11px;font-size:.875rem;font-weight:500;cursor:pointer;background:var(--surface);transition:background .1s,border-color .1s;text-align:center}
-.cal-btn:hover{background:#f5f5ff;border-color:var(--accent)}
+
+/* Anchor phase */
+.anchor-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px}
+.anchor-step{font-size:.75rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+.anchor-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.anchor-chip{background:var(--bg);border:1.5px solid var(--border);border-radius:999px;padding:7px 16px;font-size:.875rem;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s}
+.anchor-chip:hover{border-color:var(--accent);background:#f5f5ff}
+.anchor-chip.selected{border-color:var(--accent);background:#f0f0ff;color:var(--accent)}
+
+/* Calibration bucket */
+.cal-box{background:#f8f8ff;border:1px solid #d4d5f5;border-radius:var(--radius);padding:20px;margin-top:14px}
+.cal-lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px}
+.cal-q{font-size:1rem;font-weight:600;margin-bottom:16px;line-height:1.4}
+.bucket-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bucket-btn{border:1.5px solid var(--border);border-radius:10px;padding:14px 10px;cursor:pointer;background:var(--surface);transition:border-color .15s,background .15s;text-align:center}
+.bucket-btn:hover{border-color:var(--accent);background:#f5f5ff}
+.bucket-label{font-size:1rem;font-weight:700;color:var(--text)}
+.bucket-desc{font-size:.75rem;color:var(--muted);margin-top:3px}
+
 .result-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
 .result-row:last-child{border-bottom:none}
 .rk{font-size:.8rem;color:var(--muted);width:26px;text-align:right;flex-shrink:0}
@@ -52,8 +65,6 @@ textarea:focus{border-color:var(--accent)}
 .saved-ranking:hover{background:var(--bg)}
 .saved-ranking .sr-title{font-size:.9rem;font-weight:600}
 .saved-ranking .sr-meta{font-size:.78rem;color:var(--muted);margin-top:2px}
-.saved-ranking .sr-arrow{color:var(--muted);font-size:1.1rem}
-.divider{height:1px;background:var(--border);margin:16px 0}
 .success-banner{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:.85rem;color:#166534;margin-top:12px;display:none}
 .hidden{display:none!important}
 </style>
@@ -77,7 +88,7 @@ textarea:focus{border-color:var(--accent)}
 
 <div class="container">
 
-  <!-- Auth gate (shown when not signed in, optional) -->
+  <!-- Auth gate -->
   <div id="phaseAuth" class="hidden">
     <div class="card" style="text-align:center;padding:40px 24px">
       <div style="font-size:2.5rem;margin-bottom:12px">🎌</div>
@@ -91,7 +102,7 @@ textarea:focus{border-color:var(--accent)}
     </div>
   </div>
 
-  <!-- Saved rankings (shown when signed in) -->
+  <!-- Saved rankings -->
   <div id="phaseSaved" class="hidden">
     <div class="card">
       <h2>Your saved rankings</h2>
@@ -112,11 +123,21 @@ textarea:focus{border-color:var(--accent)}
     <div class="card hidden" id="showListCard">
       <h2>Your list <span id="showCount" style="font-weight:400;font-size:.875rem;color:var(--muted)"></span></h2>
       <div class="chips" id="showChips"></div>
-      <button class="btn" onclick="startRanking()">Start Ranking</button>
+      <button class="btn" onclick="goToAnchors()">Continue</button>
     </div>
   </div>
 
-  <!-- Ranking -->
+  <!-- Anchor questions (before ranking starts) -->
+  <div id="phaseAnchors" class="hidden">
+    <div class="anchor-card">
+      <div class="anchor-step" id="anchorStep"></div>
+      <h2 id="anchorQ"></h2>
+      <p class="hint" id="anchorHint"></p>
+      <div class="anchor-chips" id="anchorChips"></div>
+    </div>
+  </div>
+
+  <!-- Ranking + calibration -->
   <div id="phaseRank" class="hidden">
     <div class="card">
       <div class="phase-lbl" id="phaseLbl">Ranking</div>
@@ -134,10 +155,7 @@ textarea:focus{border-color:var(--accent)}
         <div class="cal-box">
           <div class="cal-lbl">Score check</div>
           <div class="cal-q" id="calQ"></div>
-          <div class="cal-btns">
-            <div class="cal-btn" id="calY" onclick="answerCal(true)"></div>
-            <div class="cal-btn" id="calN" onclick="answerCal(false)"></div>
-          </div>
+          <div class="bucket-grid" id="bucketGrid"></div>
         </div>
       </div>
     </div>
@@ -160,23 +178,19 @@ textarea:focus{border-color:var(--accent)}
 
 </div>
 
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <script>
-// ─── Firebase init ───────────────────────────────────────────
+// ─── Firebase ────────────────────────────────────────────────
 const firebaseConfig = {
   apiKey: "AIzaSyCNnB2Hgujv0QFhuunj5erioS2nVxHGdC4",
   authDomain: "animelist-68a38.firebaseapp.com",
   projectId: "animelist-68a38",
   storageBucket: "animelist-68a38.firebasestorage.app",
   messagingSenderId: "171802843233",
-  appId: "1:171802843233:web:a6db1a7b8d021642d4f220",
-  measurementId: "G-7MKBN2SL2G"
+  appId: "1:171802843233:web:a6db1a7b8d021642d4f220"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -190,10 +204,7 @@ auth.onAuthStateChanged(user => {
     document.getElementById('userAvatar').src = user.photoURL || '';
     document.getElementById('userName').textContent = user.displayName?.split(' ')[0] || 'You';
     document.getElementById('saveBtn').style.display = 'inline-flex';
-    // If on auth gate, move to saved rankings
-    if (!document.getElementById('phaseAuth').classList.contains('hidden')) {
-      showSavedRankings();
-    }
+    if (!document.getElementById('phaseAuth').classList.contains('hidden')) showSavedRankings();
   } else {
     document.getElementById('signInBtn').classList.remove('hidden');
     document.getElementById('userInfo').classList.add('hidden');
@@ -201,90 +212,74 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-function signIn() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).then(() => {
-    showSavedRankings();
-  }).catch(err => alert('Sign-in failed: ' + err.message));
+function signIn(){
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .then(()=>showSavedRankings())
+    .catch(e=>alert('Sign-in failed: '+e.message));
 }
+function signOut(){ auth.signOut().then(()=>location.reload()); }
+function continueAsGuest(){ hide('phaseAuth'); show('phaseInput'); }
 
-function signOut() {
-  auth.signOut().then(() => location.reload());
-}
-
-function continueAsGuest() {
-  hide('phaseAuth');
-  show('phaseInput');
-}
-
-// ─── Saved rankings ──────────────────────────────────────────
-async function showSavedRankings() {
-  hideAll();
-  show('phaseSaved');
-  const hint = document.getElementById('savedHint');
-  const list = document.getElementById('savedList');
-  hint.textContent = 'Loading...';
-  list.innerHTML = '';
+async function showSavedRankings(){
+  hideAll(); show('phaseSaved');
+  const hint=document.getElementById('savedHint');
+  const list=document.getElementById('savedList');
+  hint.textContent='Loading...'; list.innerHTML='';
   try {
-    const snap = await db.collection('users').doc(currentUser.uid)
+    const snap=await db.collection('users').doc(currentUser.uid)
       .collection('rankings').orderBy('createdAt','desc').limit(20).get();
-    if (snap.empty) {
-      hint.textContent = "You haven't saved any rankings yet.";
-    } else {
-      hint.textContent = `${snap.size} saved ranking${snap.size !== 1 ? 's' : ''}`;
-      snap.forEach(doc => {
-        const d = doc.data();
-        const el = document.createElement('div');
-        el.className = 'saved-ranking';
-        const date = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '';
-        el.innerHTML = `<div><div class="sr-title">${d.name || 'Ranking'}</div><div class="sr-meta">${d.shows?.length || 0} shows · ${date}</div></div><span class="sr-arrow">›</span>`;
-        el.onclick = () => viewSavedRanking(d);
-        list.appendChild(el);
-      });
-    }
-  } catch(e) {
-    hint.textContent = 'Could not load rankings.';
-  }
+    if(snap.empty){ hint.textContent="You haven't saved any rankings yet."; return; }
+    hint.textContent=`${snap.size} saved ranking${snap.size!==1?'s':''}`;
+    snap.forEach(doc=>{
+      const d=doc.data();
+      const el=document.createElement('div');
+      el.className='saved-ranking';
+      const date=d.createdAt?.toDate?d.createdAt.toDate().toLocaleDateString():'';
+      el.innerHTML=`<div><div class="sr-title">${d.name||'Ranking'}</div><div class="sr-meta">${d.shows?.length||0} shows · ${date}</div></div><span style="color:var(--muted)">›</span>`;
+      el.onclick=()=>viewSavedRanking(d);
+      list.appendChild(el);
+    });
+  } catch(e){ hint.textContent='Could not load rankings.'; }
 }
 
-function viewSavedRanking(data) {
-  hideAll();
-  show('phaseResults');
-  sortedList = data.shows || [];
-  calBounds = data.calBounds || [];
-  document.getElementById('resultSub').textContent = `${sortedList.length} shows · saved on ${data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString() : ''}`;
-  renderResults(data.scored || computeScores(sortedList));
+function viewSavedRanking(data){
+  hideAll(); show('phaseResults');
+  sortedList=data.shows||[]; calBounds=data.calBounds||[];
+  document.getElementById('resultSub').textContent=`${sortedList.length} shows · saved on ${data.createdAt?.toDate?data.createdAt.toDate().toLocaleDateString():''}`;
+  renderResults(data.scored||computeScores(sortedList));
 }
 
-function startNew() {
-  hideAll();
-  show('phaseInput');
-}
+function startNew(){ hideAll(); show('phaseInput'); }
 
-async function saveRanking() {
-  if (!currentUser) { signIn(); return; }
-  const scored = computeScores(sortedList);
-  const name = prompt('Name this ranking (e.g. "Spring 2024 watchlist"):', 'My Anime Ranking') || 'My Anime Ranking';
+async function saveRanking(){
+  if(!currentUser){signIn();return;}
+  const scored=computeScores(sortedList);
+  const name=prompt('Name this ranking:','My Anime Ranking')||'My Anime Ranking';
   try {
     await db.collection('users').doc(currentUser.uid).collection('rankings').add({
-      name,
-      shows: sortedList,
-      scored,
-      calBounds,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      name, shows:sortedList, scored, calBounds,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
-    const banner = document.getElementById('saveBanner');
-    banner.style.display = 'block';
-    setTimeout(() => banner.style.display = 'none', 3000);
-  } catch(e) {
-    alert('Could not save: ' + e.message);
-  }
+    const b=document.getElementById('saveBanner');
+    b.style.display='block'; setTimeout(()=>b.style.display='none',3000);
+  } catch(e){ alert('Could not save: '+e.message); }
 }
 
-// ─── App state ───────────────────────────────────────────────
+// ─── State ───────────────────────────────────────────────────
 let shows=[], sortedList=[], comparisons=[], currentComparison=null;
 let totalCmps=0, doneCmps=0, calBounds=[], calQueue=[];
+let anchorFavoriteId=null, anchorWorstId=null;
+let anchorStep=0; // 0=favorite, 1=worst, 2=done
 
+// Score buckets shown during calibration
+const BUCKETS = [
+  { label:'1 – 3', desc:'Not for me',      min:1, max:3,  score:2   },
+  { label:'4 – 6', desc:'Pretty average',  min:4, max:6,  score:5   },
+  { label:'7 – 8', desc:'Solid / good',    min:7, max:8,  score:7.5 },
+  { label:'9 – 10',desc:'Amazing',         min:9, max:10, score:9.5 },
+];
+
+// ─── Input ───────────────────────────────────────────────────
 function addFromPaste(){
   const text=document.getElementById('pasteArea').value.trim();
   if(!text)return;
@@ -295,33 +290,80 @@ function addFromPaste(){
   document.getElementById('pasteArea').value='';
   renderChips();
 }
-
-function removeShow(id){shows=shows.filter(s=>s.id!==id);renderChips();}
-
+function removeShow(id){ shows=shows.filter(s=>s.id!==id); renderChips(); }
 function renderChips(){
   const card=document.getElementById('showListCard');
   if(!shows.length){card.classList.add('hidden');return;}
   card.classList.remove('hidden');
   document.getElementById('showCount').textContent=`(${shows.length})`;
-  document.getElementById('showChips').innerHTML=shows.map(s=>`<span class="chip">${s.name}<button class="chip-rm" onclick="removeShow(${s.id})">×</button></span>`).join('');
+  document.getElementById('showChips').innerHTML=shows.map(s=>
+    `<span class="chip">${s.name}<button class="chip-rm" onclick="removeShow(${s.id})">×</button></span>`
+  ).join('');
 }
 
-function startRanking(){
+// ─── Anchor phase ────────────────────────────────────────────
+function goToAnchors(){
   if(shows.length<2){alert('Add at least 2 shows!');return;}
   hide('phaseInput');
+  anchorStep=0; anchorFavoriteId=null; anchorWorstId=null;
+  showAnchorStep();
+  show('phaseAnchors');
+}
+
+const ANCHOR_QUESTIONS=[
+  {
+    step:'Question 1 of 2',
+    q:'What is your absolute favorite show on this list?',
+    hint:'This will serve as your top reference point — but won\'t necessarily be a 10.'
+  },
+  {
+    step:'Question 2 of 2',
+    q:'Which show did you enjoy the least?',
+    hint:'This anchors the bottom of your ranking — but won\'t necessarily be a 1.'
+  }
+];
+
+function showAnchorStep(){
+  const aq=ANCHOR_QUESTIONS[anchorStep];
+  document.getElementById('anchorStep').textContent=aq.step;
+  document.getElementById('anchorQ').textContent=aq.q;
+  document.getElementById('anchorHint').textContent=aq.hint;
+  const excluded=anchorStep===1?anchorFavoriteId:null;
+  document.getElementById('anchorChips').innerHTML=shows
+    .filter(s=>s.id!==excluded)
+    .map(s=>`<div class="anchor-chip" onclick="pickAnchor(${s.id})">${s.name}</div>`)
+    .join('');
+}
+
+function pickAnchor(id){
+  // Highlight selection
+  document.querySelectorAll('.anchor-chip').forEach(c=>{
+    c.classList.toggle('selected', c.onclick.toString().includes(id));
+  });
+  if(anchorStep===0){
+    anchorFavoriteId=id;
+    setTimeout(()=>{ anchorStep=1; showAnchorStep(); }, 350);
+  } else {
+    anchorWorstId=id;
+    setTimeout(()=>{ hide('phaseAnchors'); startRanking(); }, 350);
+  }
+}
+
+// ─── Ranking ─────────────────────────────────────────────────
+function startRanking(){
   show('phaseRank');
   totalCmps=Math.ceil(shows.length*Math.log2(Math.max(shows.length,2)));
-  doneCmps=0;calBounds=[];
+  doneCmps=0; calBounds=[];
   calQueue=buildCalQueue(shows.length);
   runSort();
 }
 
 function buildCalQueue(n){
   if(n<4)  return [];
-  if(n<6)  return [{pct:.5,threshold:7}];
-  if(n<9)  return [{pct:.3,threshold:8},{pct:.7,threshold:5}];
-  if(n<14) return [{pct:.2,threshold:9},{pct:.5,threshold:7},{pct:.75,threshold:4}];
-  return [{pct:.15,threshold:9},{pct:.35,threshold:8},{pct:.55,threshold:6},{pct:.75,threshold:4}];
+  if(n<6)  return [{pct:.5}];
+  if(n<9)  return [{pct:.3},{pct:.7}];
+  if(n<14) return [{pct:.2},{pct:.5},{pct:.78}];
+  return [{pct:.15},{pct:.35},{pct:.55},{pct:.75}];
 }
 
 async function runSort(){
@@ -359,7 +401,7 @@ function nextStep(){
 }
 
 function showCmp(c){
-  hide('calBlock');show('cmpBlock');
+  hide('calBlock'); show('cmpBlock');
   document.getElementById('vsA').textContent=c.a.name;
   document.getElementById('vsB').textContent=c.b.name;
   doneCmps++;
@@ -367,23 +409,27 @@ function showCmp(c){
   document.getElementById('progBar').style.width=pct+'%';
   document.getElementById('cmpHint').textContent=`Comparison ${doneCmps} of ~${totalCmps}`;
   document.getElementById('phaseLbl').textContent='Ranking';
-  maybeInjectCal(c.a,doneCmps/totalCmps);
+  maybeInjectCal(c.a, doneCmps/totalCmps);
 }
 
-function maybeInjectCal(show,pct){
+function maybeInjectCal(show, pct){
   if(!calQueue.length)return;
   if(pct>=calQueue[0].pct){
-    const{threshold}=calQueue.shift();
-    comparisons.unshift({type:'cal',show,threshold});
+    calQueue.shift();
+    comparisons.unshift({type:'cal', show});
   }
 }
 
 function showCal(c){
-  hide('cmpBlock');show('calBlock');
+  hide('cmpBlock'); show('calBlock');
   document.getElementById('phaseLbl').textContent='Score check';
-  document.getElementById('calQ').textContent=`Would you personally rate "${c.show.name}" above a ${c.threshold}?`;
-  document.getElementById('calY').textContent=`Yes — above a ${c.threshold}`;
-  document.getElementById('calN').textContent=`No — ${c.threshold} or below`;
+  document.getElementById('calQ').textContent=`Where would you place "${c.show.name}" overall?`;
+  document.getElementById('bucketGrid').innerHTML=BUCKETS.map(b=>
+    `<div class="bucket-btn" onclick="answerCal(${c.show.id},${b.score})">
+      <div class="bucket-label">${b.label}</div>
+      <div class="bucket-desc">${b.desc}</div>
+    </div>`
+  ).join('');
 }
 
 function pick(side){
@@ -395,41 +441,63 @@ function pick(side){
   if(comparisons.length)nextStep();
 }
 
-function answerCal(above){
+function answerCal(showId, score){
   if(!currentComparison||currentComparison.type!=='cal')return;
-  calBounds.push({showId:currentComparison.show.id,above,threshold:currentComparison.threshold});
+  calBounds.push({showId, score});
   currentComparison=null;
   if(comparisons.length)nextStep();
 }
 
+// ─── Scoring ─────────────────────────────────────────────────
 function computeScores(ranked){
   const n=ranked.length;
-  let pts=calBounds.map(({showId,above,threshold})=>{
-    const r=ranked.findIndex(s=>s.id===showId);
-    if(r<0)return null;
-    return{rank:r,score:above?threshold+.5:threshold-.5};
-  }).filter(Boolean);
 
+  // Start with anchor points from upfront questions + calibration buckets
+  let pts=[];
+
+  // Favorite anchor: its final rank position gets a score from its bucket (or 9.5 default)
+  if(anchorFavoriteId!=null){
+    const r=ranked.findIndex(s=>s.id===anchorFavoriteId);
+    const cb=calBounds.find(b=>b.showId===anchorFavoriteId);
+    if(r>=0) pts.push({rank:r, score:cb?cb.score:9.5});
+  }
+
+  // Worst anchor: its final rank position gets a score from its bucket (or 2 default)
+  if(anchorWorstId!=null){
+    const r=ranked.findIndex(s=>s.id===anchorWorstId);
+    const cb=calBounds.find(b=>b.showId===anchorWorstId);
+    if(r>=0) pts.push({rank:r, score:cb?cb.score:2});
+  }
+
+  // Mid-ranking calibration points
+  calBounds.forEach(({showId,score})=>{
+    if(showId===anchorFavoriteId||showId===anchorWorstId)return;
+    const r=ranked.findIndex(s=>s.id===showId);
+    if(r>=0) pts.push({rank:r, score});
+  });
+
+  // Sort by rank, enforce monotonically decreasing scores
   pts.sort((a,b)=>a.rank-b.rank);
   for(let i=1;i<pts.length;i++){
-    if(pts[i].score>=pts[i-1].score) pts[i].score=pts[i-1].score-.5;
+    if(pts[i].score>=pts[i-1].score) pts[i].score=pts[i-1].score-0.3;
   }
   for(let i=pts.length-2;i>=0;i--){
-    if(pts[i].score<=pts[i+1].score) pts[i].score=pts[i+1].score+.5;
+    if(pts[i].score<=pts[i+1].score) pts[i].score=pts[i+1].score+0.3;
   }
-  pts.forEach(p=>p.score=Math.min(10,Math.max(0,p.score)));
+  pts.forEach(p=>p.score=Math.min(10,Math.max(0.5,p.score)));
 
+  // Extend to cover edges
   if(!pts.length){
     pts=[{rank:0,score:8.5},{rank:n-1,score:3.5}];
   } else {
     if(pts[0].rank>0){
-      const slope=pts.length>1?(pts[0].score-pts[1].score)/(pts[1].rank-pts[0].rank):.3;
+      const slope=pts.length>1?(pts[0].score-pts[1].score)/Math.max(1,pts[1].rank-pts[0].rank):0.3;
       pts.unshift({rank:0,score:Math.min(10,pts[0].score+slope*pts[0].rank)});
     }
     if(pts[pts.length-1].rank<n-1){
       const last=pts[pts.length-1],prev=pts.length>1?pts[pts.length-2]:null;
-      const slope=prev?(prev.score-last.score)/(last.rank-prev.rank):.3;
-      pts.push({rank:n-1,score:Math.max(0,last.score-slope*(n-1-last.rank))});
+      const slope=prev?(prev.score-last.score)/Math.max(1,last.rank-prev.rank):0.3;
+      pts.push({rank:n-1,score:Math.max(0.5,last.score-slope*(n-1-last.rank))});
     }
   }
 
@@ -444,13 +512,16 @@ function computeScores(ranked){
     }
     return 5;
   }
+
   return ranked.map((s,i)=>({...s,score:Math.round(interp(i)*10)/10}));
 }
 
+// ─── Results ─────────────────────────────────────────────────
 function showResults(){
-  hide('phaseRank');show('phaseResults');
+  hide('phaseRank'); show('phaseResults');
   const scored=computeScores(sortedList);
-  document.getElementById('resultSub').textContent=`${scored.length} shows ranked · ${calBounds.length} score calibration${calBounds.length!==1?'s':''} applied`;
+  document.getElementById('resultSub').textContent=
+    `${scored.length} shows ranked · ${calBounds.length} calibration point${calBounds.length!==1?'s':''} used`;
   renderResults(scored);
 }
 
@@ -465,25 +536,24 @@ function renderResults(scored){
 
 function copyResults(){
   const scored=computeScores(sortedList);
-  navigator.clipboard.writeText(scored.map((s,i)=>`#${i+1} ${s.name} — ${s.score.toFixed(1)}/10`).join('\n')).then(()=>alert('Copied!'));
+  navigator.clipboard.writeText(scored.map((s,i)=>`#${i+1} ${s.name} — ${s.score.toFixed(1)}/10`).join('\n'))
+    .then(()=>alert('Copied!'));
 }
 
 function restart(){
   shows=[];sortedList=[];comparisons=[];currentComparison=null;
-  doneCmps=0;calBounds=[];calQueue=[];
+  doneCmps=0;calBounds=[];calQueue=[];anchorFavoriteId=null;anchorWorstId=null;
   hide('phaseResults');
   if(currentUser) showSavedRankings();
   else show('phaseInput');
 }
 
-// ─── Phase helpers ───────────────────────────────────────────
-const phases=['phaseAuth','phaseSaved','phaseInput','phaseRank','phaseResults'];
-function hideAll(){phases.forEach(p=>document.getElementById(p).classList.add('hidden'));}
-function show(id){document.getElementById(id).classList.remove('hidden');}
-function hide(id){document.getElementById(id).classList.add('hidden');}
+// ─── Helpers ─────────────────────────────────────────────────
+const phases=['phaseAuth','phaseSaved','phaseInput','phaseAnchors','phaseRank','phaseResults'];
+function hideAll(){ phases.forEach(p=>document.getElementById(p).classList.add('hidden')); }
+function show(id){ document.getElementById(id).classList.remove('hidden'); }
+function hide(id){ document.getElementById(id).classList.add('hidden'); }
 
-// ─── Init ────────────────────────────────────────────────────
-// Show auth gate on first load; auth state change handles the rest
 hideAll();
 show('phaseAuth');
 </script>

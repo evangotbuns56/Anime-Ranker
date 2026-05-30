@@ -24,10 +24,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 .view.active{display:block}
 
 /* Bottom nav */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav-h);background:rgba(255,255,255,0.96);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:100}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--muted);transition:color .15s;border:none;background:none;padding:0}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav-h);background:rgba(255,255,255,0.96);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;align-items:center;z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--muted);transition:color .15s;border:none;background:none;padding:0;height:100%}
 .nav-item.active{color:var(--accent)}
 .nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-plus-wrap{flex:1;display:flex;align-items:center;justify-content:center;height:100%}
+.nav-plus{width:46px;height:46px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;box-shadow:0 2px 10px rgba(99,102,241,.35);transition:transform .15s,box-shadow .15s}
+.nav-plus:hover{transform:scale(1.08);box-shadow:0 4px 16px rgba(99,102,241,.45)}
+.nav-plus svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round}
 .nav-item span{font-size:.65rem;font-weight:600;letter-spacing:.02em}
 
 /* ── Cards ── */
@@ -143,6 +147,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 input[type=text]{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;font-size:.875rem;font-family:inherit;outline:none;background:var(--surface);color:var(--text)}
 input[type=text]:focus{border-color:var(--accent)}
 .hidden{display:none!important}
+/* Show detail */
+.show-hero{display:flex;gap:14px;padding:16px 14px}
+.show-cover{width:90px;height:128px;border-radius:10px;object-fit:cover;background:var(--border);flex-shrink:0}
+.show-hero-info{flex:1;padding-top:2px}
+.show-hero-title{font-size:1rem;font-weight:700;line-height:1.3;margin-bottom:4px}
+.show-hero-meta{font-size:.78rem;color:var(--muted);margin-bottom:8px}
+.show-hero-genres{display:flex;flex-wrap:wrap;gap:4px}
+.genre-tag{background:var(--accent-light);color:var(--accent);font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:999px}
+.seen-count{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin:0 14px 12px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.seen-count svg{width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:1.8;flex-shrink:0}
+.seen-count-text{font-size:.875rem;font-weight:600}
+/* Add-to-list picker */
+.pick-list-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin:8px 14px;padding:14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .1s}
+.pick-list-card:hover{background:var(--bg)}
 .sign-in-prompt{text-align:center;padding:40px 20px}
 .sign-in-prompt .icon{font-size:2rem;margin-bottom:12px}
 .btn-google{background:#fff;color:#333;border:1.5px solid var(--border);border-radius:10px;padding:10px 20px;font-size:.875rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;margin-top:14px}
@@ -351,6 +369,52 @@ input[type=text]:focus{border-color:var(--accent)}
     </div>
   </div>
 
+  <!-- ══ ADD TO LIST ══ -->
+  <div class="view" id="view-addshow">
+    <div id="addshow-pick">
+      <div class="section-title">Pick a list to add to</div>
+      <div id="pickListItems"></div>
+      <div id="pickListEmpty" class="empty-state hidden">
+        <div class="icon">📋</div>
+        <p>No saved lists yet.<br>Create one from the Lists tab first.</p>
+      </div>
+    </div>
+    <div id="addshow-input" class="hidden">
+      <div class="rank-section">
+        <div class="phase-lbl">Adding to: <span id="addingToName" style="color:var(--text);text-transform:none;font-weight:600"></span></div>
+        <div style="font-size:1rem;font-weight:700;margin-bottom:6px">What show did you watch?</div>
+        <input type="text" id="addShowSearchInput" placeholder="Show name…" oninput="onAddShowSearch(this.value)">
+        <div id="addShowSearchResults" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-top:8px;overflow:hidden;display:none"></div>
+        <div style="margin-top:10px">
+          <button class="btn btn-accent btn-sm" onclick="confirmAddShow()">Add &amp; Slot In</button>
+          <button class="btn-outline btn-sm" onclick="navTo('lists')" style="border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer;margin-left:8px">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SHOW DETAIL ══ -->
+  <div class="view" id="view-showdetail">
+    <div class="show-hero">
+      <img class="show-cover" id="sdCover" src="" alt="">
+      <div class="show-hero-info">
+        <div class="show-hero-title" id="sdTitle"></div>
+        <div class="show-hero-meta" id="sdMeta"></div>
+        <div class="show-hero-genres" id="sdGenres"></div>
+      </div>
+    </div>
+    <div class="seen-count" id="sdSeenCount">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      <div class="seen-count-text" id="sdSeenText">Loading…</div>
+    </div>
+    <div class="section-title">In these rankings</div>
+    <div id="sdRankings" style="background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin:0 14px;overflow:hidden"></div>
+    <div id="sdEmpty" class="empty-state hidden"><div class="icon">🔍</div><p>No one has ranked this show yet.</p></div>
+    <div style="padding:12px 14px">
+      <button class="btn-outline" style="width:100%;border-radius:10px;padding:9px;font-size:.875rem;font-weight:600;cursor:pointer" onclick="navTo('search')">← Back to Search</button>
+    </div>
+  </div>
+
 </div><!-- /main -->
 
 <!-- Bottom nav -->
@@ -363,6 +427,11 @@ input[type=text]:focus{border-color:var(--accent)}
     <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     <span>Lists</span>
   </button>
+  <div class="nav-plus-wrap">
+    <button class="nav-plus" onclick="navTo('addshow')">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
   <button class="nav-item" id="nav-search" onclick="navTo('search')">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <span>Search</span>
@@ -406,7 +475,7 @@ function signOut(){auth.signOut();}
 
 // ─── Navigation ─────────────────────────────────────────────
 let currentView='feed';
-const VIEWS=['feed','lists','search','profile','ranking','detail'];
+const VIEWS=['feed','lists','search','profile','ranking','detail','addshow','showdetail'];
 
 function navTo(view){
   if(view==='ranking')return; // ranking entered via startNewRanking()
@@ -426,8 +495,8 @@ function navTo(view){
   if(view==='feed')loadFeed();
   if(view==='lists')loadMyLists();
   if(view==='profile')loadProfile();
+  if(view==='addshow')loadAddShow();
   if(view==='search'){document.getElementById('searchEmpty').classList.remove('hidden');}
-  // Reset search
   if(view!=='search') document.getElementById('searchInput').value='';
 }
 
@@ -584,12 +653,13 @@ async function searchShows(q){
     const items=data?.data?.Page?.media||[];
     if(!items.length){results.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">No results found.</div>';return;}
     results.innerHTML=items.map(m=>`
-      <div class="search-result">
+      <div class="search-result" style="cursor:pointer" onclick='viewShowDetail(${JSON.stringify({id:m.id,title:m.title.english||m.title.romaji,cover:m.coverImage?.medium||"",year:m.startDate?.year||"",genres:(m.genres||[]).slice(0,3)}).replace(/'/g,"&#39;")})'>
         <img class="search-result-img" src="${m.coverImage?.medium||''}" loading="lazy" onerror="this.style.display='none'">
         <div class="search-result-info">
           <div class="search-result-title">${m.title.english||m.title.romaji}</div>
           <div class="search-result-meta">${m.startDate?.year||''}${(m.genres||[]).slice(0,2).length?' · '+(m.genres||[]).slice(0,2).join(', '):''}</div>
         </div>
+        <span style="color:var(--muted);font-size:1rem;padding-left:8px">›</span>
       </div>`).join('');
   }catch{results.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">Could not reach AniList.</div>';}
 }
@@ -970,6 +1040,182 @@ async function saveRanking(){
 function copyResults(){
   const scored=computeScores(sortedList);
   navigator.clipboard.writeText(scored.map((s,i)=>`#${i+1} ${s.name} — ${s.score.toFixed(1)}/10`).join('\n')).then(()=>toast('Copied to clipboard!'));
+}
+
+// ─── Add show to existing list ──────────────────────────────
+let _editDocId=null, _editDocData=null, _addShowName='';
+
+async function loadAddShow(){
+  if(!currentUser){navTo('feed');signIn();return;}
+  document.getElementById('addshow-pick').classList.remove('hidden');
+  document.getElementById('addshow-input').classList.add('hidden');
+  const items=document.getElementById('pickListItems');
+  const empty=document.getElementById('pickListEmpty');
+  items.innerHTML=''; empty.classList.add('hidden');
+  try{
+    const snap=await db.collection('rankings').where('uid','==',currentUser.uid).limit(20).get();
+    if(snap.empty){empty.classList.remove('hidden');return;}
+    snap.docs.forEach(doc=>{
+      const d=doc.data(),el=document.createElement('div');
+      el.className='pick-list-card';
+      el.innerHTML=`<div style="flex:1"><div style="font-size:.9rem;font-weight:600">${d.name||'Ranking'}</div><div style="font-size:.75rem;color:var(--muted);margin-top:2px">${(d.scored||[]).length} shows</div></div><span style="color:var(--muted)">›</span>`;
+      el.onclick=()=>pickListForAdd(doc.id,d);
+      items.appendChild(el);
+    });
+  }catch(e){toast('Could not load lists.');}
+}
+
+function pickListForAdd(docId,data){
+  _editDocId=docId; _editDocData=data;
+  document.getElementById('addshow-pick').classList.add('hidden');
+  document.getElementById('addshow-input').classList.remove('hidden');
+  document.getElementById('addingToName').textContent=data.name||'Ranking';
+  document.getElementById('addShowSearchInput').value='';
+  document.getElementById('addShowSearchResults').style.display='none';
+  _addShowName='';
+}
+
+let _addSearchTimer=null;
+function onAddShowSearch(val){
+  clearTimeout(_addSearchTimer);
+  const res=document.getElementById('addShowSearchResults');
+  _addShowName=val;
+  if(!val.trim()){res.style.display='none';return;}
+  _addSearchTimer=setTimeout(async()=>{
+    try{
+      const gql=`query($s:String){Page(perPage:5){media(search:$s,type:ANIME,sort:SEARCH_MATCH){title{english romaji}}}}`;
+      const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:gql,variables:{s:val}})});
+      const data=await r.json();
+      const items=data?.data?.Page?.media||[];
+      if(!items.length){res.style.display='none';return;}
+      res.style.display='block';
+      res.innerHTML=items.map(m=>{
+        const name=m.title.english||m.title.romaji;
+        return`<div style="padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);font-size:.875rem" onclick="selectAddShowName('${name.replace(/'/g,"&#39;")}')"> ${name}</div>`;
+      }).join('');
+    }catch{}
+  },300);
+}
+
+function selectAddShowName(name){
+  _addShowName=name;
+  document.getElementById('addShowSearchInput').value=name;
+  document.getElementById('addShowSearchResults').style.display='none';
+}
+
+async function confirmAddShow(){
+  const name=_addShowName||document.getElementById('addShowSearchInput').value.trim();
+  if(!name){toast('Enter a show name.');return;}
+  if(!_editDocData){toast('No list selected.');return;}
+  // Load the ranking state and run insertion
+  sortedList=(_editDocData.shows||[]).map(s=>({...s}));
+  calBounds=_editDocData.calBounds||[];
+  anchorFavoriteId=_editDocData.anchorFavoriteId||null;
+  anchorWorstId=_editDocData.anchorWorstId||null;
+  shows=[...sortedList];
+  // Run insert flow inside ranking view
+  enterRankingMode();
+  document.getElementById('headerTitle').textContent='Add to List';
+  showRV('rv-compare');
+  const newShow={id:Math.random(),name,isNew:true};
+  window._insertShow=newShow;
+  // Binary search
+  let lo=0,hi=sortedList.length,steps=0;
+  const maxSteps=Math.ceil(Math.log2(Math.max(sortedList.length,1)))+2;
+  document.getElementById('progBar').style.width='0%';
+  document.getElementById('phaseLbl').textContent='Slotting in';
+  hideEl('calBlock');showEl('cmpBlock');
+  document.getElementById('cmpTitle').textContent='Which did you enjoy more?';
+  while(lo<hi&&steps<maxSteps){
+    const mid=Math.floor((lo+hi)/2);
+    document.getElementById('vsA').textContent=name;
+    document.getElementById('vsB').textContent=sortedList[mid].name;
+    document.getElementById('progBar').style.width=Math.round((steps/maxSteps)*100)+'%';
+    document.getElementById('cmpHint').textContent=`Question ${steps+1} of ~${maxSteps}`;
+    const winner=await new Promise(resolve=>{
+      currentComparison={type:'insert',resolve};
+      document.getElementById('vsA').onclick=()=>{if(currentComparison?.type==='insert'){currentComparison=null;resolve('new');}};
+      document.getElementById('vsB').onclick=()=>{if(currentComparison?.type==='insert'){currentComparison=null;resolve('existing');}};
+    });
+    if(winner==='new')hi=mid;else lo=mid+1;
+    steps++;
+  }
+  window._insertPos=lo;
+  document.getElementById('progBar').style.width='85%';
+  hideEl('cmpBlock');showEl('calBlock');
+  document.getElementById('phaseLbl').textContent='Score check';
+  document.getElementById('calQ').textContent=`Where would you place "${name}" overall?`;
+  document.getElementById('bucketGrid').innerHTML=BUCKETS.map(b=>`<div class="bucket-btn" onclick="finishAddToList(${b.min},${b.max},${b.mid})"><div class="bucket-label">${b.label}</div><div class="bucket-desc">${b.desc}</div></div>`).join('');
+}
+
+async function finishAddToList(min,max,mid){
+  const s=window._insertShow;
+  calBounds.push({showId:s.id,min,max,mid});
+  sortedList.splice(window._insertPos,0,s);
+  shows=[...sortedList];
+  // Update Firestore doc
+  const scored=computeScores(sortedList);
+  try{
+    await db.collection('rankings').doc(_editDocId).update({shows:sortedList,scored,calBounds,anchorFavoriteId,anchorWorstId});
+    showRV('rv-results');
+    renderResults(scored);
+    document.getElementById('headerTitle').textContent='Results';
+    document.getElementById('saveRankingBtn').style.display='none';
+    toast('✓ Show added and list updated!');
+  }catch(e){toast('Could not save: '+e.message);}
+}
+
+// ─── Show detail page ────────────────────────────────────────
+async function viewShowDetail(show){
+  currentView='showdetail';
+  VIEWS.forEach(v=>document.getElementById('view-'+v)?.classList.remove('active'));
+  document.getElementById('view-showdetail').classList.add('active');
+  document.getElementById('bottomNav').style.display='none';
+  document.getElementById('headerLeft').style.display='none';
+  document.getElementById('headerTitle').classList.remove('hidden');
+  document.getElementById('headerTitle').textContent=show.title;
+  document.getElementById('backBtn').classList.remove('hidden');
+  document.getElementById('backBtn').onclick=()=>navTo('search');
+
+  // Populate hero
+  document.getElementById('sdCover').src=show.cover||'';
+  document.getElementById('sdTitle').textContent=show.title;
+  document.getElementById('sdMeta').textContent=[show.year,show.genres?.join(', ')].filter(Boolean).join(' · ');
+  document.getElementById('sdGenres').innerHTML=(show.genres||[]).map(g=>`<span class="genre-tag">${g}</span>`).join('');
+  document.getElementById('sdSeenText').textContent='Loading…';
+  document.getElementById('sdRankings').innerHTML='';
+  document.getElementById('sdEmpty').classList.add('hidden');
+
+  // Query rankings containing this show
+  try{
+    const snap=await db.collection('rankings').limit(100).get();
+    const titleLower=show.title.toLowerCase();
+    const matches=[];
+    snap.forEach(doc=>{
+      const d=doc.data();
+      const found=(d.scored||[]).find(s=>s.name.toLowerCase()===titleLower);
+      if(found)matches.push({id:doc.id,data:d,score:found.score});
+    });
+    const userCount=new Set(matches.map(m=>m.data.uid)).size;
+    document.getElementById('sdSeenText').textContent=
+      userCount===0?'No one has ranked this show yet'
+      :userCount===1?'1 user has this in their rankings'
+      :`${userCount} users have this in their rankings`;
+
+    if(!matches.length){document.getElementById('sdEmpty').classList.remove('hidden');return;}
+    document.getElementById('sdRankings').innerHTML=matches.map(m=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer" onclick="viewRankingDetail('${m.id}')">
+        <div style="flex:1">
+          <div style="font-size:.875rem;font-weight:600">${m.data.name||'Ranking'}</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:2px">by ${m.data.userName||'Unknown'}</div>
+        </div>
+        <span style="font-size:.85rem;font-weight:700;color:var(--accent)">${m.score?.toFixed(1)}</span>
+        <span style="color:var(--muted)">›</span>
+      </div>`).join('');
+    // Remove last border
+    const rows=document.querySelectorAll('#sdRankings > div');
+    if(rows.length)rows[rows.length-1].style.borderBottom='none';
+  }catch(e){document.getElementById('sdSeenText').textContent='Could not load data.';}
 }
 
 // ─── Toast ───────────────────────────────────────────────────

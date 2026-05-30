@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anime Ranker</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#fafafa;--surface:#fff;--border:#e5e5e5;--text:#111;--muted:#777;--accent:#6366f1;--danger:#ef4444;--radius:12px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{padding:16px 28px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between}
+header .logo{display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:700;letter-spacing:-.02em}
+.user-area{display:flex;align-items:center;gap:10px;font-size:.85rem}
+.user-area img{width:30px;height:30px;border-radius:50%;border:1px solid var(--border)}
+.container{max-width:680px;margin:0 auto;padding:32px 20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px}
+h2{font-size:1.05rem;font-weight:600;margin-bottom:6px}
+.hint{font-size:.85rem;color:var(--muted);margin-bottom:14px;line-height:1.5}
+textarea{width:100%;min-height:120px;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:.875rem;font-family:inherit;resize:vertical;outline:none;background:var(--bg);color:var(--text)}
+textarea:focus{border-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:7px;background:var(--text);color:var(--surface);border:none;border-radius:8px;padding:9px 18px;font-size:.875rem;font-weight:600;cursor:pointer;margin-top:10px}
+.btn:hover{opacity:.8}
+.btn-sec{display:inline-flex;align-items:center;gap:7px;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px 18px;font-size:.875rem;font-weight:600;cursor:pointer;margin-top:10px;margin-left:8px}
+.btn-sec:hover{background:var(--bg)}
+.btn-google{background:#fff;color:#333;border:1px solid var(--border);border-radius:8px;padding:10px 20px;font-size:.9rem;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:10px;margin-top:0}
+.btn-google:hover{background:#f5f5f5}
+.btn-ghost{background:none;border:none;color:var(--muted);font-size:.8rem;cursor:pointer;padding:4px 0;margin-top:8px;display:block;text-decoration:underline}
+.btn-ghost:hover{color:var(--text)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:.8rem}
+.chip-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;line-height:1;padding:0;margin-left:2px}
+.chip-rm:hover{color:var(--danger)}
+.prog-wrap{background:var(--border);border-radius:999px;height:5px;margin-bottom:16px;overflow:hidden}
+.prog-bar{height:100%;background:var(--accent);border-radius:999px;transition:width .3s}
+.phase-lbl{font-size:.75rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+.vs-grid{display:grid;grid-template-columns:1fr 36px 1fr;gap:10px;align-items:center;margin:14px 0 0}
+.vs-card{border:1.5px solid var(--border);border-radius:var(--radius);padding:22px 14px;cursor:pointer;text-align:center;font-size:.95rem;font-weight:600;transition:border-color .15s,background .15s;min-height:80px;display:flex;align-items:center;justify-content:center;line-height:1.4}
+.vs-card:hover{border-color:var(--accent);background:#f5f5ff}
+.vs-or{font-size:.8rem;color:var(--muted);text-align:center;font-weight:500}
+.cal-box{background:#f8f8ff;border:1px solid #d4d5f5;border-radius:var(--radius);padding:18px;margin-top:14px}
+.cal-lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+.cal-q{font-size:.95rem;font-weight:600;margin-bottom:14px;line-height:1.4}
+.cal-btns{display:flex;gap:8px}
+.cal-btn{flex:1;border:1px solid var(--border);border-radius:8px;padding:11px;font-size:.875rem;font-weight:500;cursor:pointer;background:var(--surface);transition:background .1s,border-color .1s;text-align:center}
+.cal-btn:hover{background:#f5f5ff;border-color:var(--accent)}
+.result-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.result-row:last-child{border-bottom:none}
+.rk{font-size:.8rem;color:var(--muted);width:26px;text-align:right;flex-shrink:0}
+.r-title{font-size:.9rem;font-weight:600;flex:1}
+.score{background:var(--accent);color:#fff;font-size:.8rem;font-weight:700;border-radius:7px;padding:3px 9px;flex-shrink:0}
+.saved-ranking{border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .1s}
+.saved-ranking:hover{background:var(--bg)}
+.saved-ranking .sr-title{font-size:.9rem;font-weight:600}
+.saved-ranking .sr-meta{font-size:.78rem;color:var(--muted);margin-top:2px}
+.saved-ranking .sr-arrow{color:var(--muted);font-size:1.1rem}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.success-banner{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:.85rem;color:#166534;margin-top:12px;display:none}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span style="font-size:1.4rem">🎌</span> Anime Ranker</div>
+  <div class="user-area" id="userArea">
+    <button class="btn-google" onclick="signIn()" id="signInBtn">
+      <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Sign in with Google
+    </button>
+    <div id="userInfo" class="hidden" style="display:flex;align-items:center;gap:8px">
+      <img id="userAvatar" src="" alt="">
+      <span id="userName"></span>
+      <button class="btn-ghost" style="margin:0" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Auth gate (shown when not signed in, optional) -->
+  <div id="phaseAuth" class="hidden">
+    <div class="card" style="text-align:center;padding:40px 24px">
+      <div style="font-size:2.5rem;margin-bottom:12px">🎌</div>
+      <h2 style="margin-bottom:8px">Welcome to Anime Ranker</h2>
+      <p class="hint" style="margin-bottom:24px">Sign in to save your rankings across devices, or continue as a guest.</p>
+      <button class="btn-google" style="margin:0 auto" onclick="signIn()">
+        <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>
+      <button class="btn-ghost" style="margin:12px auto 0" onclick="continueAsGuest()">Continue as guest</button>
+    </div>
+  </div>
+
+  <!-- Saved rankings (shown when signed in) -->
+  <div id="phaseSaved" class="hidden">
+    <div class="card">
+      <h2>Your saved rankings</h2>
+      <p class="hint" id="savedHint">Loading...</p>
+      <div id="savedList"></div>
+      <button class="btn" onclick="startNew()" style="margin-top:16px">+ New Ranking</button>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div id="phaseInput" class="hidden">
+    <div class="card">
+      <h2>Paste your show list</h2>
+      <p class="hint">One show per line. Hit "Add shows" and they'll appear below.</p>
+      <textarea id="pasteArea" placeholder="Hunter x Hunter&#10;Fullmetal Alchemist Brotherhood&#10;Vinland Saga&#10;Mushishi&#10;Mob Psycho 100"></textarea>
+      <button class="btn" onclick="addFromPaste()">Add shows</button>
+    </div>
+    <div class="card hidden" id="showListCard">
+      <h2>Your list <span id="showCount" style="font-weight:400;font-size:.875rem;color:var(--muted)"></span></h2>
+      <div class="chips" id="showChips"></div>
+      <button class="btn" onclick="startRanking()">Start Ranking</button>
+    </div>
+  </div>
+
+  <!-- Ranking -->
+  <div id="phaseRank" class="hidden">
+    <div class="card">
+      <div class="phase-lbl" id="phaseLbl">Ranking</div>
+      <div class="prog-wrap"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+      <div id="cmpBlock">
+        <h2>Which did you enjoy more?</h2>
+        <p class="hint" id="cmpHint" style="margin-bottom:0"></p>
+        <div class="vs-grid">
+          <div class="vs-card" id="vsA" onclick="pick('A')"></div>
+          <div class="vs-or">vs</div>
+          <div class="vs-card" id="vsB" onclick="pick('B')"></div>
+        </div>
+      </div>
+      <div id="calBlock" class="hidden">
+        <div class="cal-box">
+          <div class="cal-lbl">Score check</div>
+          <div class="cal-q" id="calQ"></div>
+          <div class="cal-btns">
+            <div class="cal-btn" id="calY" onclick="answerCal(true)"></div>
+            <div class="cal-btn" id="calN" onclick="answerCal(false)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="phaseResults" class="hidden">
+    <div class="card">
+      <h2>Your Rankings</h2>
+      <p class="hint" id="resultSub"></p>
+      <div id="resultList" style="margin-top:12px"></div>
+      <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <button class="btn" onclick="restart()" style="margin-top:0">New Ranking</button>
+        <button class="btn-sec" onclick="copyResults()" style="margin-top:0;margin-left:0">Copy as Text</button>
+        <button class="btn-sec" id="saveBtn" onclick="saveRanking()" style="margin-top:0;margin-left:0;display:none">Save Ranking</button>
+      </div>
+      <div class="success-banner" id="saveBanner">✓ Ranking saved to your account!</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ─── Firebase init ───────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCNnB2Hgujv0QFhuunj5erioS2nVxHGdC4",
+  authDomain: "animelist-68a38.firebaseapp.com",
+  projectId: "animelist-68a38",
+  storageBucket: "animelist-68a38.firebasestorage.app",
+  messagingSenderId: "171802843233",
+  appId: "1:171802843233:web:a6db1a7b8d021642d4f220",
+  measurementId: "G-7MKBN2SL2G"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+let currentUser = null;
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  if (user) {
+    document.getElementById('signInBtn').classList.add('hidden');
+    document.getElementById('userInfo').classList.remove('hidden');
+    document.getElementById('userAvatar').src = user.photoURL || '';
+    document.getElementById('userName').textContent = user.displayName?.split(' ')[0] || 'You';
+    document.getElementById('saveBtn').style.display = 'inline-flex';
+    // If on auth gate, move to saved rankings
+    if (!document.getElementById('phaseAuth').classList.contains('hidden')) {
+      showSavedRankings();
+    }
+  } else {
+    document.getElementById('signInBtn').classList.remove('hidden');
+    document.getElementById('userInfo').classList.add('hidden');
+    document.getElementById('saveBtn').style.display = 'none';
+  }
+});
+
+function signIn() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).then(() => {
+    showSavedRankings();
+  }).catch(err => alert('Sign-in failed: ' + err.message));
+}
+
+function signOut() {
+  auth.signOut().then(() => location.reload());
+}
+
+function continueAsGuest() {
+  hide('phaseAuth');
+  show('phaseInput');
+}
+
+// ─── Saved rankings ──────────────────────────────────────────
+async function showSavedRankings() {
+  hideAll();
+  show('phaseSaved');
+  const hint = document.getElementById('savedHint');
+  const list = document.getElementById('savedList');
+  hint.textContent = 'Loading...';
+  list.innerHTML = '';
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid)
+      .collection('rankings').orderBy('createdAt','desc').limit(20).get();
+    if (snap.empty) {
+      hint.textContent = "You haven't saved any rankings yet.";
+    } else {
+      hint.textContent = `${snap.size} saved ranking${snap.size !== 1 ? 's' : ''}`;
+      snap.forEach(doc => {
+        const d = doc.data();
+        const el = document.createElement('div');
+        el.className = 'saved-ranking';
+        const date = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '';
+        el.innerHTML = `<div><div class="sr-title">${d.name || 'Ranking'}</div><div class="sr-meta">${d.shows?.length || 0} shows · ${date}</div></div><span class="sr-arrow">›</span>`;
+        el.onclick = () => viewSavedRanking(d);
+        list.appendChild(el);
+      });
+    }
+  } catch(e) {
+    hint.textContent = 'Could not load rankings.';
+  }
+}
+
+function viewSavedRanking(data) {
+  hideAll();
+  show('phaseResults');
+  sortedList = data.shows || [];
+  calBounds = data.calBounds || [];
+  document.getElementById('resultSub').textContent = `${sortedList.length} shows · saved on ${data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString() : ''}`;
+  renderResults(data.scored || computeScores(sortedList));
+}
+
+function startNew() {
+  hideAll();
+  show('phaseInput');
+}
+
+async function saveRanking() {
+  if (!currentUser) { signIn(); return; }
+  const scored = computeScores(sortedList);
+  const name = prompt('Name this ranking (e.g. "Spring 2024 watchlist"):', 'My Anime Ranking') || 'My Anime Ranking';
+  try {
+    await db.collection('users').doc(currentUser.uid).collection('rankings').add({
+      name,
+      shows: sortedList,
+      scored,
+      calBounds,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const banner = document.getElementById('saveBanner');
+    banner.style.display = 'block';
+    setTimeout(() => banner.style.display = 'none', 3000);
+  } catch(e) {
+    alert('Could not save: ' + e.message);
+  }
+}
+
+// ─── App state ───────────────────────────────────────────────
+let shows=[], sortedList=[], comparisons=[], currentComparison=null;
+let totalCmps=0, doneCmps=0, calBounds=[], calQueue=[];
+
+function addFromPaste(){
+  const text=document.getElementById('pasteArea').value.trim();
+  if(!text)return;
+  text.split('\n').map(l=>l.trim()).filter(Boolean).forEach(name=>{
+    if(!shows.find(s=>s.name.toLowerCase()===name.toLowerCase()))
+      shows.push({id:Math.random(),name});
+  });
+  document.getElementById('pasteArea').value='';
+  renderChips();
+}
+
+function removeShow(id){shows=shows.filter(s=>s.id!==id);renderChips();}
+
+function renderChips(){
+  const card=document.getElementById('showListCard');
+  if(!shows.length){card.classList.add('hidden');return;}
+  card.classList.remove('hidden');
+  document.getElementById('showCount').textContent=`(${shows.length})`;
+  document.getElementById('showChips').innerHTML=shows.map(s=>`<span class="chip">${s.name}<button class="chip-rm" onclick="removeShow(${s.id})">×</button></span>`).join('');
+}
+
+function startRanking(){
+  if(shows.length<2){alert('Add at least 2 shows!');return;}
+  hide('phaseInput');
+  show('phaseRank');
+  totalCmps=Math.ceil(shows.length*Math.log2(Math.max(shows.length,2)));
+  doneCmps=0;calBounds=[];
+  calQueue=buildCalQueue(shows.length);
+  runSort();
+}
+
+function buildCalQueue(n){
+  if(n<4)  return [];
+  if(n<6)  return [{pct:.5,threshold:7}];
+  if(n<9)  return [{pct:.3,threshold:8},{pct:.7,threshold:5}];
+  if(n<14) return [{pct:.2,threshold:9},{pct:.5,threshold:7},{pct:.75,threshold:4}];
+  return [{pct:.15,threshold:9},{pct:.35,threshold:8},{pct:.55,threshold:6},{pct:.75,threshold:4}];
+}
+
+async function runSort(){
+  sortedList=await mergeSort([...shows]);
+  showResults();
+}
+
+async function mergeSort(arr){
+  if(arr.length<=1)return arr;
+  const m=Math.floor(arr.length/2);
+  return mergeFn(await mergeSort(arr.slice(0,m)),await mergeSort(arr.slice(m)));
+}
+
+async function mergeFn(L,R){
+  const res=[];let i=0,j=0;
+  while(i<L.length&&j<R.length){
+    const w=await askCmp(L[i],R[j]);
+    if(w===L[i]){res.push(L[i]);i++;}else{res.push(R[j]);j++;}
+  }
+  return res.concat(L.slice(i)).concat(R.slice(j));
+}
+
+function askCmp(a,b){
+  return new Promise(resolve=>{
+    comparisons.push({type:'cmp',a,b,resolve});
+    if(!currentComparison)nextStep();
+  });
+}
+
+function nextStep(){
+  if(!comparisons.length)return;
+  currentComparison=comparisons.shift();
+  if(currentComparison.type==='cal') showCal(currentComparison);
+  else showCmp(currentComparison);
+}
+
+function showCmp(c){
+  hide('calBlock');show('cmpBlock');
+  document.getElementById('vsA').textContent=c.a.name;
+  document.getElementById('vsB').textContent=c.b.name;
+  doneCmps++;
+  const pct=Math.min(100,Math.round((doneCmps/totalCmps)*100));
+  document.getElementById('progBar').style.width=pct+'%';
+  document.getElementById('cmpHint').textContent=`Comparison ${doneCmps} of ~${totalCmps}`;
+  document.getElementById('phaseLbl').textContent='Ranking';
+  maybeInjectCal(c.a,doneCmps/totalCmps);
+}
+
+function maybeInjectCal(show,pct){
+  if(!calQueue.length)return;
+  if(pct>=calQueue[0].pct){
+    const{threshold}=calQueue.shift();
+    comparisons.unshift({type:'cal',show,threshold});
+  }
+}
+
+function showCal(c){
+  hide('cmpBlock');show('calBlock');
+  document.getElementById('phaseLbl').textContent='Score check';
+  document.getElementById('calQ').textContent=`Would you personally rate "${c.show.name}" above a ${c.threshold}?`;
+  document.getElementById('calY').textContent=`Yes — above a ${c.threshold}`;
+  document.getElementById('calN').textContent=`No — ${c.threshold} or below`;
+}
+
+function pick(side){
+  if(!currentComparison||currentComparison.type!=='cmp')return;
+  const winner=side==='A'?currentComparison.a:currentComparison.b;
+  const resolve=currentComparison.resolve;
+  currentComparison=null;
+  resolve(winner);
+  if(comparisons.length)nextStep();
+}
+
+function answerCal(above){
+  if(!currentComparison||currentComparison.type!=='cal')return;
+  calBounds.push({showId:currentComparison.show.id,above,threshold:currentComparison.threshold});
+  currentComparison=null;
+  if(comparisons.length)nextStep();
+}
+
+function computeScores(ranked){
+  const n=ranked.length;
+  let pts=calBounds.map(({showId,above,threshold})=>{
+    const r=ranked.findIndex(s=>s.id===showId);
+    if(r<0)return null;
+    return{rank:r,score:above?threshold+.5:threshold-.5};
+  }).filter(Boolean);
+
+  pts.sort((a,b)=>a.rank-b.rank);
+  for(let i=1;i<pts.length;i++){
+    if(pts[i].score>=pts[i-1].score) pts[i].score=pts[i-1].score-.5;
+  }
+  for(let i=pts.length-2;i>=0;i--){
+    if(pts[i].score<=pts[i+1].score) pts[i].score=pts[i+1].score+.5;
+  }
+  pts.forEach(p=>p.score=Math.min(10,Math.max(0,p.score)));
+
+  if(!pts.length){
+    pts=[{rank:0,score:8.5},{rank:n-1,score:3.5}];
+  } else {
+    if(pts[0].rank>0){
+      const slope=pts.length>1?(pts[0].score-pts[1].score)/(pts[1].rank-pts[0].rank):.3;
+      pts.unshift({rank:0,score:Math.min(10,pts[0].score+slope*pts[0].rank)});
+    }
+    if(pts[pts.length-1].rank<n-1){
+      const last=pts[pts.length-1],prev=pts.length>1?pts[pts.length-2]:null;
+      const slope=prev?(prev.score-last.score)/(last.rank-prev.rank):.3;
+      pts.push({rank:n-1,score:Math.max(0,last.score-slope*(n-1-last.rank))});
+    }
+  }
+
+  function interp(rank){
+    if(rank<=pts[0].rank)return pts[0].score;
+    if(rank>=pts[pts.length-1].rank)return pts[pts.length-1].score;
+    for(let i=0;i<pts.length-1;i++){
+      if(rank>=pts[i].rank&&rank<=pts[i+1].rank){
+        const t=(rank-pts[i].rank)/(pts[i+1].rank-pts[i].rank);
+        return pts[i].score+t*(pts[i+1].score-pts[i].score);
+      }
+    }
+    return 5;
+  }
+  return ranked.map((s,i)=>({...s,score:Math.round(interp(i)*10)/10}));
+}
+
+function showResults(){
+  hide('phaseRank');show('phaseResults');
+  const scored=computeScores(sortedList);
+  document.getElementById('resultSub').textContent=`${scored.length} shows ranked · ${calBounds.length} score calibration${calBounds.length!==1?'s':''} applied`;
+  renderResults(scored);
+}
+
+function renderResults(scored){
+  document.getElementById('resultList').innerHTML=scored.map((s,i)=>`
+    <div class="result-row">
+      <span class="rk">#${i+1}</span>
+      <span class="r-title">${s.name}</span>
+      <span class="score">${s.score.toFixed(1)}</span>
+    </div>`).join('');
+}
+
+function copyResults(){
+  const scored=computeScores(sortedList);
+  navigator.clipboard.writeText(scored.map((s,i)=>`#${i+1} ${s.name} — ${s.score.toFixed(1)}/10`).join('\n')).then(()=>alert('Copied!'));
+}
+
+function restart(){
+  shows=[];sortedList=[];comparisons=[];currentComparison=null;
+  doneCmps=0;calBounds=[];calQueue=[];
+  hide('phaseResults');
+  if(currentUser) showSavedRankings();
+  else show('phaseInput');
+}
+
+// ─── Phase helpers ───────────────────────────────────────────
+const phases=['phaseAuth','phaseSaved','phaseInput','phaseRank','phaseResults'];
+function hideAll(){phases.forEach(p=>document.getElementById(p).classList.add('hidden'));}
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+
+// ─── Init ────────────────────────────────────────────────────
+// Show auth gate on first load; auth state change handles the rest
+hideAll();
+show('phaseAuth');
+</script>
+</body>
+</html>

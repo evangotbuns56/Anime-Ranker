@@ -640,6 +640,45 @@ async function viewRankingDetail(id){
   document.getElementById('backBtn').onclick=()=>navTo(d.uid===currentUser?.uid?'lists':'feed');
 }
 
+// ─── Abbreviation map ────────────────────────────────────────
+const ABBREV={
+  'jjk':'Jujutsu Kaisen','fma':'Fullmetal Alchemist','fmab':'Fullmetal Alchemist Brotherhood',
+  'hxh':'Hunter x Hunter','mha':'My Hero Academia','bnha':'My Hero Academia',
+  'aot':'Attack on Titan','snk':'Attack on Titan','kny':'Demon Slayer','ds':'Demon Slayer',
+  'sao':'Sword Art Online','opm':'One Punch Man','op':'One Piece','re:zero':'Re:Zero',
+  'rezero':'Re:Zero','re0':'Re:Zero','tpn':'The Promised Neverland','nnt':'Seven Deadly Sins',
+  'sds':'Seven Deadly Sins','dbs':'Dragon Ball Super','dbz':'Dragon Ball Z','db':'Dragon Ball',
+  'ft':'Fairy Tail','bc':'Black Clover','tr':'Tokyo Revengers','ttgl':'Gurren Lagann',
+  'ngnl':'No Game No Life','tg':'Tokyo Ghoul','mp100':'Mob Psycho 100','mob psycho':'Mob Psycho 100',
+  'tqq':'The Quintessential Quintuplets','5toubun':'The Quintessential Quintuplets',
+  'mdud':'My Dress-Up Darling','bisque doll':'My Dress-Up Darling',
+  'cote':'Classroom of the Elite','csa':'Classroom of the Elite',
+  'vs':'Vinland Saga','sg':'Steins;Gate','s;g':'Steins;Gate','steins gate':'Steins;Gate',
+  'nge':'Neon Genesis Evangelion','eva':'Neon Genesis Evangelion','evangelion':'Neon Genesis Evangelion',
+  'jjba':'JoJos Bizarre Adventure','jojo':'JoJos Bizarre Adventure',
+  'csm':'Chainsaw Man','sxf':'Spy x Family','mia':'Made in Abyss',
+  'bocchi':'Bocchi the Rock','btr':'Bocchi the Rock','ve':'Violet Evergarden',
+  'logh':'Legend of the Galactic Heroes','onk':'Oshi no Ko',
+  'td':'Toradora','ylia':'Your Lie in April','shigatsu':'Your Lie in April',
+  'snafu':'My Teen Romantic Comedy SNAFU','oregairu':'My Teen Romantic Comedy SNAFU',
+  'yahari':'My Teen Romantic Comedy SNAFU','shield hero':'Rising of the Shield Hero',
+  'tate':'Rising of the Shield Hero','konosuba':'KonoSuba','overlord':'Overlord',
+  'blue lock':'Blue Lock','bl':'Blue Lock','lycoris':'Lycoris Recoil',
+  'cb':'Cowboy Bebop','bebop':'Cowboy Bebop','flcl':'FLCL',
+  'silent voice':'A Silent Voice','koe no katachi':'A Silent Voice',
+  'your name':'Your Name','kimi no na wa':'Your Name',
+  'howl':'Howls Moving Castle','mononoke':'Princess Mononoke',
+  'spirited away':'Spirited Away','totoro':'My Neighbor Totoro',
+  'frieren':'Frieren Beyond Journeys End','mushishi':'Mushishi',
+  'anohana':'Anohana','clannad':'Clannad','toradora':'Toradora',
+  'made in abyss':'Made in Abyss','violet evergarden':'Violet Evergarden',
+};
+
+function expandQuery(q){
+  const lower=q.toLowerCase().trim();
+  return ABBREV[lower]||q;
+}
+
 // ─── Search ──────────────────────────────────────────────────
 let searchTab='shows', searchTimer=null;
 
@@ -659,7 +698,7 @@ function onSearchInput(val){
   results.style.display='block';
   results.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">Searching…</div>';
   searchTimer=setTimeout(()=>{
-    if(searchTab==='shows')searchShows(val.trim());
+    if(searchTab==='shows')searchShows(expandQuery(val.trim()));
     else searchUsers(val.trim());
   },350);
 }
@@ -816,7 +855,7 @@ async function smartResolve(){
 
   for(const original of lines){
     try{
-      const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:gql,variables:{s:original}})});
+      const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:gql,variables:{s:expandQuery(original)}})});
       const data=await r.json();
       const m=data?.data?.Page?.media?.[0];
       if(m){
@@ -1192,7 +1231,7 @@ function onAddShowSearch(val){
   _addSearchTimer=setTimeout(async()=>{
     try{
       const gql=`query($s:String){Page(perPage:5){media(search:$s,type:ANIME,sort:SEARCH_MATCH){title{english romaji}}}}`;
-      const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:gql,variables:{s:val}})});
+      const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:gql,variables:{s:expandQuery(val)}})});
       const data=await r.json();
       const items=data?.data?.Page?.media||[];
       if(!items.length){res.style.display='none';return;}

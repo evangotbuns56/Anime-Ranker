@@ -465,12 +465,14 @@ async function loadFeed(){
   if(!currentUser){signInPrompt.classList.remove('hidden');return;}
 
   try{
-    const snap=await db.collection('rankings').orderBy('createdAt','desc').limit(30).get();
+    const snap=await db.collection('rankings').limit(30).get();
     if(snap.empty){empty.classList.remove('hidden');return;}
-    snap.forEach(doc=>{
-      const d=doc.data();
-      list.appendChild(buildFeedCard(doc.id,d));
+    const feedDocs=[...snap.docs].sort((a,b)=>{
+      const ta=a.data().createdAt?.toMillis?.()||0;
+      const tb=b.data().createdAt?.toMillis?.()||0;
+      return tb-ta;
     });
+    feedDocs.forEach(doc=>list.appendChild(buildFeedCard(doc.id,doc.data())));
   }catch(e){list.innerHTML='<div class="empty-state"><p>Could not load feed.</p></div>';}
 }
 
@@ -504,9 +506,14 @@ async function loadMyLists(){
   const empty=document.getElementById('myListsEmpty');
   list.innerHTML=''; empty.classList.add('hidden');
   try{
-    const snap=await db.collection('rankings').where('uid','==',currentUser.uid).orderBy('createdAt','desc').limit(30).get();
+    const snap=await db.collection('rankings').where('uid','==',currentUser.uid).limit(30).get();
     if(snap.empty){empty.classList.remove('hidden');return;}
-    snap.forEach(doc=>{
+    const docs=[...snap.docs].sort((a,b)=>{
+      const ta=a.data().createdAt?.toMillis?.()||0;
+      const tb=b.data().createdAt?.toMillis?.()||0;
+      return tb-ta;
+    });
+    docs.forEach(doc=>{
       const d=doc.data(),el=document.createElement('div');
       el.className='list-card';
       const date=d.createdAt?.toDate?d.createdAt.toDate().toLocaleDateString():'';

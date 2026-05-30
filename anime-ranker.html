@@ -520,13 +520,16 @@ function computeScores(ranked){
     if(r>=0)pts.push({rank:r,score:mid});
   });
 
-  // Sort by rank, enforce strictly decreasing scores
+  // Sort by rank ascending
   pts.sort((a,b)=>a.rank-b.rank);
-  for(let i=1;i<pts.length;i++){
-    if(pts[i].score>=pts[i-1].score) pts[i].score=pts[i-1].score-0.2;
-  }
+  // Backward pass FIRST: if a lower-ranked show has a higher bucket score,
+  // raise the show above it (propagates floors upward)
   for(let i=pts.length-2;i>=0;i--){
     if(pts[i].score<=pts[i+1].score) pts[i].score=pts[i+1].score+0.2;
+  }
+  // Forward pass: cap any that still violate descending order
+  for(let i=1;i<pts.length;i++){
+    if(pts[i].score>=pts[i-1].score) pts[i].score=pts[i-1].score-0.2;
   }
 
   // Deduplicate by rank

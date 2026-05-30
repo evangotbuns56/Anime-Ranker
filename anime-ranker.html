@@ -300,8 +300,9 @@ function renderChips(){
 
 // ─── Anchors ────────────────────────────────────────────────
 const ANCHOR_QS=[
-  {lbl:'Question 1 of 2',q:'What is your absolute favorite show on this list?',hint:"This anchors the top of your ranking — doesn't have to be a 10."},
-  {lbl:'Question 2 of 2',q:'Which show did you enjoy the least?',hint:"This anchors the bottom — doesn't have to be a 1."},
+  {lbl:'Question 1 of 3',q:'What is your absolute favorite show on this list?',hint:"This anchors the top of your ranking — doesn't have to be a 10."},
+  {lbl:'Question 2 of 3',q:'Which show did you enjoy the least?',hint:"This anchors the bottom — doesn't have to be a 1."},
+  {lbl:'Question 3 of 3',q:null,hint:'This helps calibrate where that show actually sits.',isBucket:true},
 ];
 
 function goToAnchors(){
@@ -313,12 +314,30 @@ function goToAnchors(){
 function renderAnchorQ(){
   const aq=ANCHOR_QS[anchorStep];
   document.getElementById('anchorStepLbl').textContent=aq.lbl;
-  document.getElementById('anchorQ').textContent=aq.q;
   document.getElementById('anchorHint').textContent=aq.hint;
-  const excluded=anchorStep===1?anchorFavoriteId:null;
-  document.getElementById('anchorChips').innerHTML=shows.filter(s=>s.id!==excluded).map(s=>
-    `<div class="anchor-chip" onclick="pickAnchor(${s.id})">${s.name}</div>`
-  ).join('');
+
+  if(aq.isBucket){
+    // Ask bucket question about the worst show
+    const worstShow=shows.find(s=>s.id===anchorWorstId);
+    document.getElementById('anchorQ').textContent=`Where would you place "${worstShow?.name}" overall?`;
+    document.getElementById('anchorChips').innerHTML=`<div class="bucket-grid" style="width:100%;margin-top:8px">${BUCKETS.map(b=>
+      `<div class="bucket-btn" onclick="pickAnchorBucket(${b.min},${b.max},${b.mid})">
+        <div class="bucket-label">${b.label}</div>
+        <div class="bucket-desc">${b.desc}</div>
+      </div>`
+    ).join('')}</div>`;
+  } else {
+    document.getElementById('anchorQ').textContent=aq.q;
+    const excluded=anchorStep===1?anchorFavoriteId:null;
+    document.getElementById('anchorChips').innerHTML=shows.filter(s=>s.id!==excluded).map(s=>
+      `<div class="anchor-chip" onclick="pickAnchor(${s.id})">${s.name}</div>`
+    ).join('');
+  }
+}
+
+function pickAnchorBucket(min,max,mid){
+  calBounds.push({showId:anchorWorstId,min,max,mid});
+  setTimeout(()=>{hide('phaseAnchors');startRanking();},200);
 }
 
 function pickAnchor(id){
@@ -326,7 +345,7 @@ function pickAnchor(id){
     c.classList.toggle('selected',c.getAttribute('onclick').includes('('+id+')'));
   });
   if(anchorStep===0){anchorFavoriteId=id;setTimeout(()=>{anchorStep=1;renderAnchorQ();},350);}
-  else{anchorWorstId=id;setTimeout(()=>{hide('phaseAnchors');startRanking();},350);}
+  else{anchorWorstId=id;setTimeout(()=>{anchorStep=2;renderAnchorQ();},350);}
 }
 
 // ─── Ranking ────────────────────────────────────────────────
@@ -452,7 +471,7 @@ async function insertShow(){
   document.getElementById('phaseLbl').textContent='Score check';
   document.getElementById('calQ').textContent=`Where would you place "${name}" overall?`;
   document.getElementById('bucketGrid').innerHTML=BUCKETS.map(b=>
-    `<div class="bucket-btn" onclick="finishInsert(${newShow.id},${b.min},${b.max},${b.mid})">
+    `<div class="bucket-btn" onclick="finishInsert(${b.min},${b.max},${b.mid})">
       <div class="bucket-label">${b.label}</div>
       <div class="bucket-desc">${b.desc}</div>
     </div>`
@@ -462,7 +481,8 @@ async function insertShow(){
   window._insertPos=lo;window._insertShow=newShow;
 }
 
-function finishInsert(showId,min,max,mid){
+function finishInsert(min,max,mid){
+  const showId=window._insertShow.id;
   calBounds.push({showId,min,max,mid});
   const pos=window._insertPos,s=window._insertShow;
   sortedList.splice(pos,0,s);
@@ -544,7 +564,14 @@ function computeScores(ranked){
     return 5;
   }
 
-  return ranked.map((s,i)=>({...s,score:Math.round(Math.min(10,Math.max(0.5,interp(i)))*10)/10}));
+  const result=ranked.map((s,i)=>({...s,score:Math.round(Math.min(10,Math.max(0.5,interp(i)))*10)/10}));
+  // Final pass: guarantee rank order always beats bucket score
+  for(let i=1;i<result.length;i++){
+    if(result[i].score>=result[i-1].score){
+      result[i].score=Math.max(0.5,Math.round((result[i-1].score-0.1)*10)/10);
+    }
+  }
+  return result;
 }
 
 // ─── Results ────────────────────────────────────────────────

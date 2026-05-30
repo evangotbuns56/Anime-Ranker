@@ -9,7 +9,8 @@
 :root{--bg:#fafafa;--surface:#fff;--border:#e5e5e5;--text:#111;--muted:#777;--accent:#6366f1;--danger:#ef4444;--radius:12px}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 header{padding:16px 28px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between}
-header .logo{display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:700;letter-spacing:-.02em}
+header .logo{display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:700;letter-spacing:-.02em;cursor:pointer;text-decoration:none;color:var(--text)}
+header .logo:hover{opacity:.75}
 .user-area{display:flex;align-items:center;gap:10px;font-size:.85rem}
 .user-area img{width:30px;height:30px;border-radius:50%;border:1px solid var(--border)}
 .container{max-width:680px;margin:0 auto;padding:32px 20px}
@@ -68,7 +69,7 @@ input[type=text]:focus{border-color:var(--accent)}
 <body>
 
 <header>
-  <div class="logo"><span style="font-size:1.4rem">🎌</span> Anime Ranker</div>
+  <a class="logo" onclick="goHome()"><span style="font-size:1.4rem">🎌</span> Anime Ranker</a>
   <div class="user-area" id="userArea">
     <button class="btn-google" onclick="signIn()" id="signInBtn">
       <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
@@ -98,11 +99,15 @@ input[type=text]:focus{border-color:var(--accent)}
   </div>
 
   <div id="phaseSaved" class="hidden">
-    <div class="card">
-      <h2>Your saved rankings</h2>
-      <p class="hint" id="savedHint">Loading...</p>
-      <div id="savedList"></div>
-      <button class="btn" onclick="startNew()" style="margin-top:16px">+ New Ranking</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="font-size:1.3rem">My Rankings</h2>
+      <button class="btn" onclick="startNew()" style="margin-top:0">+ New Ranking</button>
+    </div>
+    <p class="hint" id="savedHint" style="margin-bottom:12px"></p>
+    <div id="savedList"></div>
+    <div id="savedEmpty" class="hidden" style="text-align:center;padding:40px 20px;color:var(--muted)">
+      <div style="font-size:2rem;margin-bottom:10px">🎌</div>
+      <p style="font-size:.9rem">No rankings yet. Start your first one!</p>
     </div>
   </div>
 
@@ -167,11 +172,11 @@ input[type=text]:focus{border-color:var(--accent)}
         </div>
       </div>
 
-      <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-        <button class="btn" onclick="restart()" style="margin-top:0">New Ranking</button>
-        <button class="btn-sec" onclick="toggleAddForm()" style="margin-top:0;margin-left:0">+ Add a Show</button>
-        <button class="btn-sec" onclick="copyResults()" style="margin-top:0;margin-left:0">Copy as Text</button>
+      <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <button class="btn" onclick="toggleAddForm()" style="margin-top:0">+ Add a Show</button>
         <button class="btn-sec" id="saveBtn" onclick="saveRanking()" style="margin-top:0;margin-left:0;display:none">Save Ranking</button>
+        <button class="btn-sec" onclick="copyResults()" style="margin-top:0;margin-left:0">Copy as Text</button>
+        <button class="btn-sec" onclick="restart()" style="margin-top:0;margin-left:0">New Ranking</button>
       </div>
       <div class="success-banner" id="saveBanner">✓ Ranking saved to your account!</div>
     </div>
@@ -212,20 +217,35 @@ function continueAsGuest(){hide('phaseAuth');show('phaseInput');}
 async function showSavedRankings(){
   hideAll();show('phaseSaved');
   const hint=document.getElementById('savedHint'),list=document.getElementById('savedList');
-  hint.textContent='Loading...';list.innerHTML='';
+  const empty=document.getElementById('savedEmpty');
+  hint.textContent='';list.innerHTML='';empty.classList.add('hidden');
+  if(!currentUser){hint.textContent='Sign in to see your saved rankings.';return;}
+  hint.textContent='Loading...';
   try{
     const snap=await db.collection('users').doc(currentUser.uid).collection('rankings').orderBy('createdAt','desc').limit(20).get();
-    if(snap.empty){hint.textContent="You haven't saved any rankings yet.";return;}
-    hint.textContent=`${snap.size} saved ranking${snap.size!==1?'s':''}`;
+    hint.textContent='';
+    if(snap.empty){empty.classList.remove('hidden');return;}
     snap.forEach(doc=>{
       const d=doc.data(),el=document.createElement('div');
       el.className='saved-ranking';
       const date=d.createdAt?.toDate?d.createdAt.toDate().toLocaleDateString():'';
-      el.innerHTML=`<div><div class="sr-title">${d.name||'Ranking'}</div><div class="sr-meta">${d.shows?.length||0} shows · ${date}</div></div><span style="color:var(--muted)">›</span>`;
+      const top3=(d.scored||[]).slice(0,3).map(s=>s.name).join(', ');
+      el.innerHTML=`
+        <div style="flex:1">
+          <div class="sr-title">${d.name||'Ranking'}</div>
+          <div class="sr-meta">${d.shows?.length||0} shows · ${date}</div>
+          ${top3?`<div class="sr-meta" style="margin-top:3px;color:var(--text);opacity:.6">🥇 ${top3}</div>`:''}
+        </div>
+        <span style="color:var(--muted);font-size:1.2rem">›</span>`;
       el.onclick=()=>viewSavedRanking(d);
       list.appendChild(el);
     });
   }catch(e){hint.textContent='Could not load rankings.';}
+}
+
+function goHome(){
+  if(currentUser)showSavedRankings();
+  else{hideAll();show('phaseAuth');}
 }
 
 function viewSavedRanking(data){

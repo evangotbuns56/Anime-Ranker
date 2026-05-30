@@ -268,6 +268,7 @@ async function saveRanking(){
 // ─── State ───────────────────────────────────────────────────
 let shows=[], sortedList=[], comparisons=[], currentComparison=null;
 let totalCmps=0, doneCmps=0, calBounds=[], calQueue=[];
+let nextCalAt=4; // inject a cal question every N comparisons
 let anchorFavoriteId=null, anchorWorstId=null;
 let anchorStep=0; // 0=favorite, 1=worst, 2=done
 
@@ -353,17 +354,8 @@ function pickAnchor(id){
 function startRanking(){
   show('phaseRank');
   totalCmps=Math.ceil(shows.length*Math.log2(Math.max(shows.length,2)));
-  doneCmps=0; calBounds=[];
-  calQueue=buildCalQueue(shows.length);
+  doneCmps=0; calBounds=[]; nextCalAt=4;
   runSort();
-}
-
-function buildCalQueue(n){
-  if(n<4)  return [];
-  if(n<6)  return [{pct:.5}];
-  if(n<9)  return [{pct:.3},{pct:.7}];
-  if(n<14) return [{pct:.2},{pct:.5},{pct:.78}];
-  return [{pct:.15},{pct:.35},{pct:.55},{pct:.75}];
 }
 
 async function runSort(){
@@ -409,13 +401,12 @@ function showCmp(c){
   document.getElementById('progBar').style.width=pct+'%';
   document.getElementById('cmpHint').textContent=`Comparison ${doneCmps} of ~${totalCmps}`;
   document.getElementById('phaseLbl').textContent='Ranking';
-  maybeInjectCal(c.a, doneCmps/totalCmps);
+  maybeInjectCal(c.a);
 }
 
-function maybeInjectCal(show, pct){
-  if(!calQueue.length)return;
-  if(pct>=calQueue[0].pct){
-    calQueue.shift();
+function maybeInjectCal(show){
+  if(doneCmps===nextCalAt){
+    nextCalAt+=4; // next one 4 comparisons later
     comparisons.unshift({type:'cal', show});
   }
 }
@@ -542,7 +533,7 @@ function copyResults(){
 
 function restart(){
   shows=[];sortedList=[];comparisons=[];currentComparison=null;
-  doneCmps=0;calBounds=[];calQueue=[];anchorFavoriteId=null;anchorWorstId=null;
+  doneCmps=0;calBounds=[];nextCalAt=4;anchorFavoriteId=null;anchorWorstId=null;
   hide('phaseResults');
   if(currentUser) showSavedRankings();
   else show('phaseInput');

@@ -2,187 +2,378 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Anime Ranker</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#fafafa;--surface:#fff;--border:#e5e5e5;--text:#111;--muted:#777;--accent:#6366f1;--danger:#ef4444;--radius:12px}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-header{padding:16px 28px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between}
-header .logo{display:flex;align-items:center;gap:10px;font-size:1.1rem;font-weight:700;letter-spacing:-.02em;cursor:pointer;text-decoration:none;color:var(--text)}
-header .logo:hover{opacity:.75}
-.user-area{display:flex;align-items:center;gap:10px;font-size:.85rem}
-.user-area img{width:30px;height:30px;border-radius:50%;border:1px solid var(--border)}
-.container{max-width:680px;margin:0 auto;padding:32px 20px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px}
-h2{font-size:1.05rem;font-weight:600;margin-bottom:6px}
-.hint{font-size:.85rem;color:var(--muted);margin-bottom:14px;line-height:1.5}
-textarea{width:100%;min-height:120px;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:.875rem;font-family:inherit;resize:vertical;outline:none;background:var(--bg);color:var(--text)}
-textarea:focus{border-color:var(--accent)}
-input[type=text]{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.875rem;font-family:inherit;outline:none;background:var(--bg);color:var(--text)}
-input[type=text]:focus{border-color:var(--accent)}
-.btn{display:inline-flex;align-items:center;gap:7px;background:var(--text);color:var(--surface);border:none;border-radius:8px;padding:9px 18px;font-size:.875rem;font-weight:600;cursor:pointer;margin-top:10px}
-.btn:hover{opacity:.8}
-.btn-sec{display:inline-flex;align-items:center;gap:7px;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px 18px;font-size:.875rem;font-weight:600;cursor:pointer;margin-top:10px;margin-left:8px}
-.btn-sec:hover{background:var(--bg)}
-.btn-google{background:#fff;color:#333;border:1px solid var(--border);border-radius:8px;padding:10px 20px;font-size:.9rem;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:10px;margin-top:0}
-.btn-google:hover{background:#f5f5f5}
-.btn-ghost{background:none;border:none;color:var(--muted);font-size:.8rem;cursor:pointer;padding:4px 0;margin-top:8px;display:block;text-decoration:underline}
-.btn-ghost:hover{color:var(--text)}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:.8rem}
-.chip-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;line-height:1;padding:0;margin-left:2px}
-.chip-rm:hover{color:var(--danger)}
-.prog-wrap{background:var(--border);border-radius:999px;height:5px;margin-bottom:16px;overflow:hidden}
+:root{
+  --bg:#f5f5f7;--surface:#fff;--border:#e5e5e5;--text:#111;--muted:#888;
+  --accent:#6366f1;--accent-light:#eef2ff;--danger:#ef4444;--green:#10b981;
+  --radius:14px;--nav-h:64px;--header-h:52px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;position:relative;overflow-x:hidden}
+
+/* ── Layout ── */
+.app-header{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--header-h);background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:100}
+.header-title{font-size:1rem;font-weight:700;letter-spacing:-.02em}
+.header-back{display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:500;color:var(--accent);cursor:pointer;background:none;border:none;padding:0}
+.header-logo{font-size:1.05rem;font-weight:800;letter-spacing:-.03em;cursor:pointer}
+
+.main{padding-top:var(--header-h);padding-bottom:calc(var(--nav-h) + 8px);min-height:100vh}
+.view{display:none;padding:0 0 16px}
+.view.active{display:block}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav-h);background:rgba(255,255,255,0.96);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;align-items:stretch;z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--muted);transition:color .15s;border:none;background:none;padding:0}
+.nav-item.active{color:var(--accent)}
+.nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-item span{font-size:.65rem;font-weight:600;letter-spacing:.02em}
+
+/* ── Cards ── */
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin:12px 14px;overflow:hidden}
+.card-pad{padding:16px}
+.section-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:16px 18px 8px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--text);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:.875rem;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-sm{padding:7px 14px;font-size:.8rem;border-radius:8px}
+.btn-outline{background:transparent;color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:9px 18px;font-size:.875rem;font-weight:600;cursor:pointer}
+.btn-outline:hover{background:var(--bg)}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-red{background:var(--danger)}
+
+/* ── Feed view ── */
+.feed-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin:10px 14px;overflow:hidden}
+.feed-card-header{display:flex;align-items:center;gap:10px;padding:12px 14px 8px}
+.feed-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:var(--accent);flex-shrink:0;overflow:hidden}
+.feed-avatar img{width:100%;height:100%;object-fit:cover}
+.feed-user-name{font-size:.875rem;font-weight:600}
+.feed-meta{font-size:.75rem;color:var(--muted)}
+.feed-ranking-title{font-size:.95rem;font-weight:700;padding:0 14px 10px}
+.feed-show-row{display:flex;align-items:center;gap:8px;padding:7px 14px;border-top:1px solid var(--border)}
+.feed-rank{font-size:.75rem;color:var(--muted);width:22px;flex-shrink:0;text-align:right}
+.feed-show-name{font-size:.85rem;font-weight:500;flex:1}
+.feed-score{font-size:.78rem;font-weight:700;color:var(--accent)}
+.feed-see-more{display:block;text-align:center;padding:10px;font-size:.8rem;color:var(--accent);font-weight:600;cursor:pointer;border-top:1px solid var(--border)}
+
+/* ── Lists view ── */
+.list-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);margin:8px 14px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .1s}
+.list-card:hover{background:var(--bg)}
+.list-card-info{flex:1}
+.list-card-title{font-size:.95rem;font-weight:600;margin-bottom:3px}
+.list-card-meta{font-size:.78rem;color:var(--muted)}
+.list-card-top{font-size:.75rem;color:var(--text);opacity:.65;margin-top:3px}
+.list-arrow{color:var(--muted);font-size:1.1rem}
+.new-ranking-btn{margin:12px 14px;width:calc(100% - 28px);border-radius:var(--radius)}
+
+/* ── Search view ── */
+.search-bar-wrap{padding:12px 14px}
+.search-input{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:11px 16px;font-size:.9rem;font-family:inherit;outline:none;color:var(--text)}
+.search-input:focus{border-color:var(--accent)}
+.search-tabs{display:flex;gap:0;padding:0 14px 10px}
+.search-tab{flex:1;padding:8px;text-align:center;font-size:.8rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted)}
+.search-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.search-result{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface)}
+.search-result:last-child{border-bottom:none}
+.search-result-img{width:40px;height:56px;border-radius:6px;object-fit:cover;background:var(--border);flex-shrink:0}
+.search-result-info{flex:1}
+.search-result-title{font-size:.875rem;font-weight:600}
+.search-result-meta{font-size:.75rem;color:var(--muted);margin-top:2px}
+.user-result{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);background:var(--surface);cursor:pointer}
+.user-result-avatar{width:40px;height:40px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:var(--accent);flex-shrink:0;overflow:hidden}
+.user-result-avatar img{width:100%;height:100%;object-fit:cover}
+
+/* ── Profile view ── */
+.profile-hero{padding:28px 18px 20px;text-align:center}
+.profile-avatar{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;color:var(--accent);overflow:hidden}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-name{font-size:1.2rem;font-weight:700;margin-bottom:4px}
+.profile-handle{font-size:.85rem;color:var(--muted)}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 14px 4px}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.stat-num{font-size:1.3rem;font-weight:800;color:var(--accent)}
+.stat-lbl{font-size:.68rem;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.top-show-row{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border)}
+.top-show-row:last-child{border-bottom:none}
+.top-rank{font-size:.75rem;color:var(--muted);width:20px;text-align:right;flex-shrink:0}
+.top-name{font-size:.875rem;font-weight:500;flex:1}
+.top-score{font-size:.8rem;font-weight:700;color:var(--accent)}
+
+/* ── Ranking flow ── */
+.rank-section{padding:16px 14px}
+.phase-lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+.prog-wrap{background:var(--border);border-radius:999px;height:4px;margin-bottom:18px}
 .prog-bar{height:100%;background:var(--accent);border-radius:999px;transition:width .3s}
-.phase-lbl{font-size:.75rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
-.vs-grid{display:grid;grid-template-columns:1fr 36px 1fr;gap:10px;align-items:center;margin:14px 0 0}
-.vs-card{border:1.5px solid var(--border);border-radius:var(--radius);padding:22px 14px;cursor:pointer;text-align:center;font-size:.95rem;font-weight:600;transition:border-color .15s,background .15s;min-height:80px;display:flex;align-items:center;justify-content:center;line-height:1.4}
-.vs-card:hover{border-color:var(--accent);background:#f5f5ff}
-.vs-or{font-size:.8rem;color:var(--muted);text-align:center;font-weight:500}
-.anchor-chip{background:var(--bg);border:1.5px solid var(--border);border-radius:999px;padding:7px 16px;font-size:.875rem;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s;display:inline-block;margin:3px}
-.anchor-chip:hover{border-color:var(--accent);background:#f5f5ff}
-.anchor-chip.selected{border-color:var(--accent);background:#f0f0ff;color:var(--accent)}
-.cal-box{background:#f8f8ff;border:1px solid #d4d5f5;border-radius:var(--radius);padding:20px;margin-top:14px}
-.cal-lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px}
-.cal-q{font-size:1rem;font-weight:600;margin-bottom:16px;line-height:1.4}
-.bucket-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.bucket-btn{border:1.5px solid var(--border);border-radius:10px;padding:14px 10px;cursor:pointer;background:var(--surface);transition:border-color .15s,background .15s;text-align:center}
-.bucket-btn:hover{border-color:var(--accent);background:#f5f5ff}
-.bucket-label{font-size:1rem;font-weight:700;color:var(--text)}
-.bucket-desc{font-size:.75rem;color:var(--muted);margin-top:3px}
-.result-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.paste-area{width:100%;min-height:120px;border:1.5px solid var(--border);border-radius:12px;padding:12px;font-size:.875rem;font-family:inherit;resize:none;outline:none;background:var(--surface);color:var(--text)}
+.paste-area:focus{border-color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:4px 10px;font-size:.78rem}
+.chip-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;line-height:1;padding:0;margin-left:1px}
+.anchor-chip{background:var(--surface);border:1.5px solid var(--border);border-radius:999px;padding:7px 16px;font-size:.875rem;font-weight:500;cursor:pointer;display:inline-block;margin:3px;transition:border-color .15s,background .15s}
+.anchor-chip:hover,.anchor-chip.selected{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+.vs-grid{display:grid;grid-template-columns:1fr 28px 1fr;gap:8px;align-items:center;margin:14px 0 0}
+.vs-card{border:1.5px solid var(--border);border-radius:var(--radius);padding:20px 12px;cursor:pointer;text-align:center;font-size:.95rem;font-weight:600;min-height:76px;display:flex;align-items:center;justify-content:center;line-height:1.4;transition:border-color .15s,background .15s}
+.vs-card:hover{border-color:var(--accent);background:var(--accent-light)}
+.vs-or{font-size:.75rem;color:var(--muted);text-align:center}
+.bucket-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.bucket-btn{border:1.5px solid var(--border);border-radius:12px;padding:14px 10px;cursor:pointer;background:var(--surface);text-align:center;transition:border-color .15s,background .15s}
+.bucket-btn:hover{border-color:var(--accent);background:var(--accent-light)}
+.bucket-label{font-size:1rem;font-weight:700}
+.bucket-desc{font-size:.72rem;color:var(--muted);margin-top:3px}
+.cal-box{background:var(--accent-light);border:1px solid #c7d2fe;border-radius:var(--radius);padding:18px;margin-top:14px}
+.cal-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:8px}
+.cal-q{font-size:.95rem;font-weight:600;margin-bottom:0;line-height:1.4}
+.result-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border)}
 .result-row:last-child{border-bottom:none}
-.rk{font-size:.8rem;color:var(--muted);width:26px;text-align:right;flex-shrink:0}
+.rk{font-size:.75rem;color:var(--muted);width:24px;text-align:right;flex-shrink:0}
 .r-title{font-size:.9rem;font-weight:600;flex:1}
-.score{background:var(--accent);color:#fff;font-size:.8rem;font-weight:700;border-radius:7px;padding:3px 9px;flex-shrink:0}
-.score.new{background:#059669}
-.saved-ranking{border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background .1s}
-.saved-ranking:hover{background:var(--bg)}
-.saved-ranking .sr-title{font-size:.9rem;font-weight:600}
-.saved-ranking .sr-meta{font-size:.78rem;color:var(--muted);margin-top:2px}
-.success-banner{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:.85rem;color:#166534;margin-top:12px;display:none}
-.add-show-form{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:12px}
+.score-badge{background:var(--accent);color:#fff;font-size:.78rem;font-weight:700;border-radius:7px;padding:3px 9px;flex-shrink:0}
+.score-badge.new-show{background:var(--green)}
+.add-show-form{margin:0 14px 12px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+
+/* ── Misc ── */
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted)}
+.empty-state .icon{font-size:2.5rem;margin-bottom:12px}
+.empty-state p{font-size:.9rem;line-height:1.5}
+.divider{height:1px;background:var(--border);margin:4px 0}
+.hint{font-size:.82rem;color:var(--muted);line-height:1.5;margin-top:4px}
+.success-toast{position:fixed;bottom:calc(var(--nav-h) + 12px);left:50%;transform:translateX(-50%);background:#111;color:#fff;border-radius:10px;padding:10px 18px;font-size:.85rem;font-weight:500;z-index:200;display:none;white-space:nowrap}
+input[type=text]{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;font-size:.875rem;font-family:inherit;outline:none;background:var(--surface);color:var(--text)}
+input[type=text]:focus{border-color:var(--accent)}
 .hidden{display:none!important}
+.sign-in-prompt{text-align:center;padding:40px 20px}
+.sign-in-prompt .icon{font-size:2rem;margin-bottom:12px}
+.btn-google{background:#fff;color:#333;border:1.5px solid var(--border);border-radius:10px;padding:10px 20px;font-size:.875rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;margin-top:14px}
+.btn-google:hover{background:var(--bg)}
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo" onclick="goHome()"><span style="font-size:1.4rem">🎌</span> Anime Ranker</div>
-  <div class="user-area" id="userArea">
-    <button class="btn-google" onclick="signIn()" id="signInBtn">
-      <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      Sign in with Google
-    </button>
-    <div id="userInfo" class="hidden" style="display:flex;align-items:center;gap:8px">
-      <img id="userAvatar" src="" alt="">
-      <span id="userName"></span>
-      <button class="btn-ghost" style="margin:0" onclick="signOut()">Sign out</button>
-    </div>
+<!-- Header -->
+<div class="app-header" id="appHeader">
+  <div id="headerLeft">
+    <span class="header-logo">🎌 Anime Ranker</span>
   </div>
-</header>
+  <div id="headerTitle" class="header-title hidden"></div>
+  <div id="headerRight" style="width:60px;display:flex;justify-content:flex-end">
+    <button class="header-back hidden" id="backBtn" onclick="exitRanking()">✕ Exit</button>
+  </div>
+</div>
 
-<div class="container">
+<!-- Main content -->
+<div class="main">
 
-  <div id="phaseAuth" class="hidden">
-    <div class="card" style="text-align:center;padding:40px 24px">
-      <div style="font-size:2.5rem;margin-bottom:12px">🎌</div>
-      <h2 style="margin-bottom:8px">Welcome to Anime Ranker</h2>
-      <p class="hint" style="margin-bottom:24px">Sign in to save your rankings, or continue as a guest.</p>
-      <button class="btn-google" style="margin:0 auto" onclick="signIn()">
+  <!-- ══ FEED ══ -->
+  <div class="view active" id="view-feed">
+    <div class="section-title">Recent Rankings</div>
+    <div id="feedList"></div>
+    <div id="feedEmpty" class="empty-state hidden">
+      <div class="icon">📺</div>
+      <p>No rankings yet.<br>Be the first to create one!</p>
+    </div>
+    <div id="feedSignIn" class="sign-in-prompt hidden">
+      <div class="icon">🎌</div>
+      <p style="font-size:.95rem;font-weight:600;margin-bottom:6px">Welcome to Anime Ranker</p>
+      <p style="font-size:.85rem;color:var(--muted)">Sign in to rank your shows and see what others are watching.</p>
+      <button class="btn-google" onclick="signIn()">
         <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Sign in with Google
       </button>
-      <button class="btn-ghost" style="margin:12px auto 0" onclick="continueAsGuest()">Continue as guest</button>
     </div>
   </div>
 
-  <div id="phaseSaved" class="hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <h2 style="font-size:1.3rem">My Rankings</h2>
-      <button class="btn" onclick="startNew()" style="margin-top:0">+ New Ranking</button>
+  <!-- ══ LISTS ══ -->
+  <div class="view" id="view-lists">
+    <div id="listsSignedOut" class="sign-in-prompt hidden">
+      <div class="icon">📋</div>
+      <p style="font-size:.95rem;font-weight:600;margin-bottom:6px">Your Lists</p>
+      <p style="font-size:.85rem;color:var(--muted)">Sign in to create and save your anime rankings.</p>
+      <button class="btn-google" onclick="signIn()">
+        <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>
     </div>
-    <p class="hint" id="savedHint" style="margin-bottom:12px"></p>
-    <div id="savedList"></div>
-    <div id="savedEmpty" class="hidden" style="text-align:center;padding:40px 20px;color:var(--muted)">
-      <div style="font-size:2rem;margin-bottom:10px">🎌</div>
-      <p style="font-size:.9rem">No rankings yet. Start your first one!</p>
-    </div>
-  </div>
-
-  <div id="phaseInput" class="hidden">
-    <div class="card">
-      <h2>Paste your show list</h2>
-      <p class="hint">One show per line. Hit "Add shows" and they'll appear below.</p>
-      <textarea id="pasteArea" placeholder="Hunter x Hunter&#10;Fullmetal Alchemist Brotherhood&#10;Vinland Saga&#10;Mushishi&#10;Mob Psycho 100"></textarea>
-      <button class="btn" onclick="addFromPaste()">Add shows</button>
-    </div>
-    <div class="card hidden" id="showListCard">
-      <h2>Your list <span id="showCount" style="font-weight:400;font-size:.875rem;color:var(--muted)"></span></h2>
-      <div class="chips" id="showChips"></div>
-      <button class="btn" onclick="goToAnchors()">Continue</button>
+    <div id="listsContent" class="hidden">
+      <button class="btn btn-accent new-ranking-btn" onclick="startNewRanking()">+ New Ranking</button>
+      <div class="section-title">Your Rankings</div>
+      <div id="myListsList"></div>
+      <div id="myListsEmpty" class="empty-state hidden">
+        <div class="icon">📋</div>
+        <p>No rankings yet.<br>Create your first one!</p>
+      </div>
     </div>
   </div>
 
-  <div id="phaseAnchors" class="hidden">
-    <div class="card">
-      <div class="phase-lbl" id="anchorStepLbl"></div>
-      <h2 id="anchorQ"></h2>
-      <p class="hint" id="anchorHint"></p>
-      <div id="anchorChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+  <!-- ══ SEARCH ══ -->
+  <div class="view" id="view-search">
+    <div class="search-bar-wrap">
+      <input class="search-input" id="searchInput" type="text" placeholder="Search shows or users..." autocomplete="off" oninput="onSearchInput(this.value)">
+    </div>
+    <div class="search-tabs">
+      <div class="search-tab active" id="tab-shows" onclick="switchSearchTab('shows')">Shows</div>
+      <div class="search-tab" id="tab-users" onclick="switchSearchTab('users')">Users</div>
+    </div>
+    <div id="searchResults" style="background:var(--surface);border-radius:var(--radius);margin:0 14px;overflow:hidden;border:1px solid var(--border)"></div>
+    <div id="searchEmpty" class="empty-state hidden">
+      <div class="icon">🔍</div>
+      <p>Search for an anime show<br>or find other users.</p>
     </div>
   </div>
 
-  <div id="phaseRank" class="hidden">
-    <div class="card">
-      <div class="phase-lbl" id="phaseLbl">Ranking</div>
-      <div class="prog-wrap"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
-      <div id="cmpBlock">
-        <h2 id="cmpTitle">Which did you enjoy more?</h2>
-        <p class="hint" id="cmpHint" style="margin-bottom:0"></p>
-        <div class="vs-grid">
-          <div class="vs-card" id="vsA" onclick="pick('A')"></div>
-          <div class="vs-or">vs</div>
-          <div class="vs-card" id="vsB" onclick="pick('B')"></div>
+  <!-- ══ PROFILE ══ -->
+  <div class="view" id="view-profile">
+    <div id="profileSignedOut" class="sign-in-prompt hidden">
+      <div class="icon">👤</div>
+      <p style="font-size:.95rem;font-weight:600;margin-bottom:6px">Your Profile</p>
+      <button class="btn-google" onclick="signIn()">
+        <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Sign in with Google
+      </button>
+    </div>
+    <div id="profileContent" class="hidden">
+      <div class="profile-hero">
+        <div class="profile-avatar" id="profileAvatar"></div>
+        <div class="profile-name" id="profileName"></div>
+        <div class="profile-handle" id="profileHandle"></div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-num" id="statLists">0</div><div class="stat-lbl">Lists</div></div>
+        <div class="stat-box"><div class="stat-num" id="statShows">0</div><div class="stat-lbl">Shows</div></div>
+        <div class="stat-box"><div class="stat-num" id="statAvg">—</div><div class="stat-lbl">Avg Score</div></div>
+      </div>
+      <div class="section-title" style="margin-top:8px">Your Top Shows</div>
+      <div class="card" style="margin:0 14px;overflow:hidden">
+        <div id="topShowsList"></div>
+        <div id="topShowsEmpty" class="empty-state hidden" style="padding:24px"><p>Rank some shows to see your top list.</p></div>
+      </div>
+      <div style="padding:16px 14px">
+        <button class="btn btn-outline" style="width:100%" onclick="signOut()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RANKING FLOW (hidden until active) ══ -->
+  <div class="view" id="view-ranking">
+
+    <!-- Sub-view: input -->
+    <div id="rv-input">
+      <div class="rank-section">
+        <div class="phase-lbl">Step 1 — Add your shows</div>
+        <textarea class="paste-area" id="pasteArea" placeholder="Paste one show per line…&#10;&#10;Hunter x Hunter&#10;FMA Brotherhood&#10;Vinland Saga"></textarea>
+        <button class="btn btn-accent" onclick="addFromPaste()" style="margin-top:10px">Add Shows</button>
+      </div>
+      <div id="inputShowsCard" class="card hidden" style="margin:0 14px">
+        <div class="card-pad" style="padding-bottom:8px">
+          <span style="font-size:.9rem;font-weight:600">Your list </span>
+          <span id="showCount" style="font-size:.82rem;color:var(--muted)"></span>
+        </div>
+        <div class="divider"></div>
+        <div class="card-pad"><div class="chips" id="showChips"></div></div>
+        <div class="card-pad" style="padding-top:4px">
+          <button class="btn btn-accent" onclick="goToAnchors()">Continue →</button>
         </div>
       </div>
-      <div id="calBlock" class="hidden">
-        <div class="cal-box">
-          <div class="cal-lbl">Score check</div>
-          <div class="cal-q" id="calQ"></div>
+    </div>
+
+    <!-- Sub-view: anchors -->
+    <div id="rv-anchors" class="hidden">
+      <div class="rank-section">
+        <div class="phase-lbl" id="anchorStepLbl"></div>
+        <div style="font-size:1.05rem;font-weight:700;margin-bottom:6px" id="anchorQ"></div>
+        <div class="hint" id="anchorHint"></div>
+        <div id="anchorChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px"></div>
+      </div>
+    </div>
+
+    <!-- Sub-view: comparison + calibration -->
+    <div id="rv-compare" class="hidden">
+      <div class="rank-section">
+        <div class="phase-lbl" id="phaseLbl">Ranking</div>
+        <div class="prog-wrap"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
+        <div id="cmpBlock">
+          <div style="font-size:1rem;font-weight:700;margin-bottom:4px" id="cmpTitle">Which did you enjoy more?</div>
+          <div class="hint" id="cmpHint" style="margin-bottom:0"></div>
+          <div class="vs-grid">
+            <div class="vs-card" id="vsA" onclick="pick('A')"></div>
+            <div class="vs-or">vs</div>
+            <div class="vs-card" id="vsB" onclick="pick('B')"></div>
+          </div>
+        </div>
+        <div id="calBlock" class="hidden">
+          <div class="cal-box">
+            <div class="cal-lbl">Score check</div>
+            <div class="cal-q" id="calQ"></div>
+          </div>
           <div class="bucket-grid" id="bucketGrid"></div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div id="phaseResults" class="hidden">
-    <div class="card">
-      <h2>Your Rankings</h2>
-      <p class="hint" id="resultSub"></p>
-      <div id="resultList" style="margin-top:12px"></div>
-
-      <div class="add-show-form hidden" id="addShowForm">
-        <p style="font-size:.85rem;font-weight:600;margin-bottom:8px">Add a new show</p>
-        <input type="text" id="newShowInput" placeholder="Show name..." />
-        <div style="display:flex;gap:8px">
-          <button class="btn" onclick="insertShow()" style="margin-top:8px">Add &amp; Slot In</button>
-          <button class="btn-sec" onclick="hide('addShowForm')" style="margin-top:8px;margin-left:0">Cancel</button>
+    <!-- Sub-view: results -->
+    <div id="rv-results" class="hidden">
+      <div class="rank-section">
+        <div style="font-size:1.1rem;font-weight:700;margin-bottom:2px">Your Rankings</div>
+        <div class="hint" id="resultSub"></div>
+      </div>
+      <div class="card" style="margin:0 14px;overflow:hidden">
+        <div id="resultList"></div>
+      </div>
+      <div id="addShowForm" class="add-show-form hidden">
+        <p style="font-size:.85rem;font-weight:600;margin-bottom:8px">Add a show</p>
+        <input type="text" id="newShowInput" placeholder="Show name…">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-sm btn-accent" onclick="insertShow()">Add &amp; Slot In</button>
+          <button class="btn-outline btn-sm" onclick="hideEl('addShowForm')" style="border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer">Cancel</button>
         </div>
       </div>
-
-      <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-        <button class="btn" onclick="toggleAddForm()" style="margin-top:0">+ Add a Show</button>
-        <button class="btn-sec" id="saveBtn" onclick="saveRanking()" style="margin-top:0;margin-left:0;display:none">Save Ranking</button>
-        <button class="btn-sec" onclick="copyResults()" style="margin-top:0;margin-left:0">Copy as Text</button>
-        <button class="btn-sec" onclick="restart()" style="margin-top:0;margin-left:0">New Ranking</button>
+      <div style="padding:12px 14px;display:flex;flex-wrap:wrap;gap:8px">
+        <button class="btn btn-accent btn-sm" onclick="toggleEl('addShowForm')">+ Add a Show</button>
+        <button class="btn btn-sm" onclick="saveRanking()" id="saveRankingBtn" style="display:none">Save Ranking</button>
+        <button class="btn-outline btn-sm" onclick="copyResults()" style="border-radius:8px;padding:7px 14px;font-size:.8rem;cursor:pointer">Copy</button>
       </div>
-      <div class="success-banner" id="saveBanner">✓ Ranking saved to your account!</div>
+    </div>
+
+  </div><!-- /view-ranking -->
+
+  <!-- ══ RANKING DETAIL VIEW ══ -->
+  <div class="view" id="view-detail">
+    <div class="rank-section">
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:2px" id="detailTitle"></div>
+      <div class="hint" id="detailMeta"></div>
+    </div>
+    <div class="card" style="margin:0 14px;overflow:hidden">
+      <div id="detailList"></div>
+    </div>
+    <div style="padding:12px 14px">
+      <button class="btn-outline" style="width:100%;border-radius:10px;padding:9px;font-size:.875rem;font-weight:600;cursor:pointer" onclick="navTo('lists')">← Back to Lists</button>
     </div>
   </div>
 
-</div>
+</div><!-- /main -->
+
+<!-- Bottom nav -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-item active" id="nav-feed" onclick="navTo('feed')">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Feed</span>
+  </button>
+  <button class="nav-item" id="nav-lists" onclick="navTo('lists')">
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <span>Lists</span>
+  </button>
+  <button class="nav-item" id="nav-search" onclick="navTo('search')">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span>Search</span>
+  </button>
+  <button class="nav-item" id="nav-profile" onclick="navTo('profile')">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Profile</span>
+  </button>
+</nav>
+
+<div class="success-toast" id="toast"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -194,191 +385,388 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(), db=firebase.firestore();
 let currentUser=null;
 
-auth.onAuthStateChanged(user=>{
+auth.onAuthStateChanged(async user=>{
   currentUser=user;
   if(user){
-    document.getElementById('signInBtn').classList.add('hidden');
-    document.getElementById('userInfo').classList.remove('hidden');
-    document.getElementById('userAvatar').src=user.photoURL||'';
-    document.getElementById('userName').textContent=user.displayName?.split(' ')[0]||'You';
-    document.getElementById('saveBtn').style.display='inline-flex';
-    if(!document.getElementById('phaseAuth').classList.contains('hidden'))showSavedRankings();
+    // Create/update user doc
+    await db.collection('users').doc(user.uid).set({
+      displayName:user.displayName||'',
+      displayNameLower:(user.displayName||'').toLowerCase(),
+      photoURL:user.photoURL||'',
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+    refreshCurrentView();
   } else {
-    document.getElementById('signInBtn').classList.remove('hidden');
-    document.getElementById('userInfo').classList.add('hidden');
-    document.getElementById('saveBtn').style.display='none';
+    refreshCurrentView();
   }
 });
 
-function signIn(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(()=>showSavedRankings()).catch(e=>alert('Sign-in failed: '+e.message));}
-function signOut(){auth.signOut().then(()=>location.reload());}
-function continueAsGuest(){hide('phaseAuth');show('phaseInput');}
+function signIn(){auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>toast('Sign-in failed: '+e.message));}
+function signOut(){auth.signOut();}
 
-async function showSavedRankings(){
-  hideAll();show('phaseSaved');
-  const hint=document.getElementById('savedHint'),list=document.getElementById('savedList');
-  const empty=document.getElementById('savedEmpty');
-  hint.textContent='';list.innerHTML='';empty.classList.add('hidden');
-  if(!currentUser){hint.textContent='Sign in to see your saved rankings.';return;}
-  hint.textContent='Loading...';
+// ─── Navigation ─────────────────────────────────────────────
+let currentView='feed';
+const VIEWS=['feed','lists','search','profile','ranking','detail'];
+
+function navTo(view){
+  if(view==='ranking')return; // ranking entered via startNewRanking()
+  currentView=view;
+  VIEWS.forEach(v=>{
+    const el=document.getElementById('view-'+v);
+    if(el)el.classList.toggle('active',v===view);
+  });
+  // Nav bar active state
+  ['feed','lists','search','profile'].forEach(v=>{
+    document.getElementById('nav-'+v)?.classList.toggle('active',v===view);
+  });
+  // Show/hide bottom nav
+  document.getElementById('bottomNav').style.display=(view==='ranking'||view==='detail')?'none':'flex';
+  // Header
+  updateHeader(view);
+  if(view==='feed')loadFeed();
+  if(view==='lists')loadMyLists();
+  if(view==='profile')loadProfile();
+  if(view==='search'){document.getElementById('searchEmpty').classList.remove('hidden');}
+  // Reset search
+  if(view!=='search') document.getElementById('searchInput').value='';
+}
+
+function updateHeader(view){
+  const titles={feed:'',lists:'',search:'',profile:'',ranking:'',detail:''};
+  document.getElementById('headerLeft').style.display=(['ranking','detail'].includes(view))?'none':'flex';
+  document.getElementById('headerTitle').classList.toggle('hidden',!['ranking','detail'].includes(view));
+  document.getElementById('backBtn').classList.toggle('hidden',!['ranking','detail'].includes(view));
+}
+
+function enterRankingMode(){
+  currentView='ranking';
+  VIEWS.forEach(v=>document.getElementById('view-'+v)?.classList.remove('active'));
+  document.getElementById('view-ranking').classList.add('active');
+  document.getElementById('bottomNav').style.display='none';
+  document.getElementById('headerLeft').style.display='none';
+  document.getElementById('headerTitle').classList.remove('hidden');
+  document.getElementById('backBtn').classList.remove('hidden');
+  document.getElementById('headerTitle').textContent='New Ranking';
+}
+
+function exitRanking(){
+  // Reset ranking state
+  resetRankingState();
+  navTo('lists');
+}
+
+// ─── Feed ────────────────────────────────────────────────────
+async function loadFeed(){
+  const list=document.getElementById('feedList');
+  const empty=document.getElementById('feedEmpty');
+  const signInPrompt=document.getElementById('feedSignIn');
+  list.innerHTML=''; empty.classList.add('hidden'); signInPrompt.classList.add('hidden');
+
+  if(!currentUser){signInPrompt.classList.remove('hidden');return;}
+
   try{
-    const snap=await db.collection('users').doc(currentUser.uid).collection('rankings').orderBy('createdAt','desc').limit(20).get();
-    hint.textContent='';
+    const snap=await db.collection('rankings').orderBy('createdAt','desc').limit(30).get();
+    if(snap.empty){empty.classList.remove('hidden');return;}
+    snap.forEach(doc=>{
+      const d=doc.data();
+      list.appendChild(buildFeedCard(doc.id,d));
+    });
+  }catch(e){list.innerHTML='<div class="empty-state"><p>Could not load feed.</p></div>';}
+}
+
+function buildFeedCard(id,d){
+  const el=document.createElement('div');
+  el.className='feed-card';
+  const date=d.createdAt?.toDate?d.createdAt.toDate().toLocaleDateString():'';
+  const initials=(d.userName||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const avatarHtml=d.userPhoto
+    ?`<img src="${d.userPhoto}" alt="">`
+    :`<span>${initials}</span>`;
+  const top5=(d.scored||[]).slice(0,5);
+  el.innerHTML=`
+    <div class="feed-card-header">
+      <div class="feed-avatar">${avatarHtml}</div>
+      <div><div class="feed-user-name">${d.userName||'Anonymous'}</div><div class="feed-meta">${date}</div></div>
+    </div>
+    <div class="feed-ranking-title">${d.name||'Anime Ranking'}</div>
+    ${top5.map((s,i)=>`<div class="feed-show-row"><span class="feed-rank">#${i+1}</span><span class="feed-show-name">${s.name}</span><span class="feed-score">${s.score?.toFixed(1)}</span></div>`).join('')}
+    <div class="feed-see-more" onclick="viewRankingDetail('${id}')">See full list (${(d.scored||[]).length} shows) →</div>`;
+  return el;
+}
+
+// ─── My Lists ───────────────────────────────────────────────
+async function loadMyLists(){
+  const content=document.getElementById('listsContent');
+  const signedOut=document.getElementById('listsSignedOut');
+  if(!currentUser){content.classList.add('hidden');signedOut.classList.remove('hidden');return;}
+  content.classList.remove('hidden');signedOut.classList.add('hidden');
+  const list=document.getElementById('myListsList');
+  const empty=document.getElementById('myListsEmpty');
+  list.innerHTML=''; empty.classList.add('hidden');
+  try{
+    const snap=await db.collection('rankings').where('uid','==',currentUser.uid).orderBy('createdAt','desc').limit(30).get();
     if(snap.empty){empty.classList.remove('hidden');return;}
     snap.forEach(doc=>{
       const d=doc.data(),el=document.createElement('div');
-      el.className='saved-ranking';
+      el.className='list-card';
       const date=d.createdAt?.toDate?d.createdAt.toDate().toLocaleDateString():'';
       const top3=(d.scored||[]).slice(0,3).map(s=>s.name).join(', ');
-      el.innerHTML=`
-        <div style="flex:1">
-          <div class="sr-title">${d.name||'Ranking'}</div>
-          <div class="sr-meta">${d.shows?.length||0} shows · ${date}</div>
-          ${top3?`<div class="sr-meta" style="margin-top:3px;color:var(--text);opacity:.6">🥇 ${top3}</div>`:''}
-        </div>
-        <span style="color:var(--muted);font-size:1.2rem">›</span>`;
-      el.onclick=()=>viewSavedRanking(d);
+      el.innerHTML=`<div class="list-card-info"><div class="list-card-title">${d.name||'Ranking'}</div><div class="list-card-meta">${(d.scored||[]).length} shows · ${date}</div>${top3?`<div class="list-card-top">🥇 ${top3}</div>`:''}</div><span class="list-arrow">›</span>`;
+      el.onclick=()=>viewRankingDetail(doc.id);
       list.appendChild(el);
     });
-  }catch(e){hint.textContent='Could not load rankings.';}
+  }catch(e){list.innerHTML='<div class="empty-state"><p>Could not load lists.</p></div>';}
 }
 
-function goHome(){
-  if(currentUser)showSavedRankings();
-  else{hideAll();show('phaseAuth');}
+// ─── Ranking detail view ─────────────────────────────────────
+async function viewRankingDetail(id){
+  const snap=await db.collection('rankings').doc(id).get();
+  if(!snap.exists)return;
+  const d=snap.data();
+  const date=d.createdAt?.toDate?d.createdAt.toDate().toLocaleDateString():'';
+  document.getElementById('detailTitle').textContent=d.name||'Ranking';
+  document.getElementById('detailMeta').textContent=`${d.userName||'Unknown'} · ${(d.scored||[]).length} shows · ${date}`;
+  document.getElementById('detailList').innerHTML=(d.scored||[]).map((s,i)=>`
+    <div class="result-row">
+      <span class="rk">#${i+1}</span>
+      <span class="r-title">${s.name}</span>
+      <span class="score-badge">${s.score?.toFixed(1)}</span>
+    </div>`).join('');
+  // Switch to detail view
+  currentView='detail';
+  VIEWS.forEach(v=>document.getElementById('view-'+v)?.classList.remove('active'));
+  document.getElementById('view-detail').classList.add('active');
+  document.getElementById('bottomNav').style.display='none';
+  document.getElementById('headerLeft').style.display='none';
+  document.getElementById('headerTitle').classList.remove('hidden');
+  document.getElementById('headerTitle').textContent=d.name||'Ranking';
+  document.getElementById('backBtn').classList.remove('hidden');
+  document.getElementById('backBtn').onclick=()=>navTo(d.uid===currentUser?.uid?'lists':'feed');
 }
 
-function viewSavedRanking(data){
-  hideAll();show('phaseResults');
-  sortedList=data.shows||[];calBounds=data.calBounds||[];
-  anchorFavoriteId=data.anchorFavoriteId||null;anchorWorstId=data.anchorWorstId||null;
-  document.getElementById('resultSub').textContent=`${sortedList.length} shows · saved on ${data.createdAt?.toDate?data.createdAt.toDate().toLocaleDateString():''}`;
-  renderResults(computeScores(sortedList));
+// ─── Search ──────────────────────────────────────────────────
+let searchTab='shows', searchTimer=null;
+
+function switchSearchTab(tab){
+  searchTab=tab;
+  document.getElementById('tab-shows').classList.toggle('active',tab==='shows');
+  document.getElementById('tab-users').classList.toggle('active',tab==='users');
+  onSearchInput(document.getElementById('searchInput').value);
 }
 
-function startNew(){hideAll();shows=[];sortedList=[];calBounds=[];anchorFavoriteId=null;anchorWorstId=null;renderChips();show('phaseInput');}
+function onSearchInput(val){
+  clearTimeout(searchTimer);
+  const results=document.getElementById('searchResults');
+  const empty=document.getElementById('searchEmpty');
+  if(!val.trim()){results.innerHTML='';results.style.display='none';empty.classList.remove('hidden');return;}
+  empty.classList.add('hidden');
+  results.style.display='block';
+  results.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">Searching…</div>';
+  searchTimer=setTimeout(()=>{
+    if(searchTab==='shows')searchShows(val.trim());
+    else searchUsers(val.trim());
+  },350);
+}
 
-async function saveRanking(){
-  if(!currentUser){signIn();return;}
-  const scored=computeScores(sortedList);
-  const name=prompt('Name this ranking:','My Anime Ranking')||'My Anime Ranking';
+async function searchShows(q){
+  const results=document.getElementById('searchResults');
   try{
-    await db.collection('users').doc(currentUser.uid).collection('rankings').add({name,shows:sortedList,scored,calBounds,anchorFavoriteId,anchorWorstId,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-    const b=document.getElementById('saveBanner');b.style.display='block';setTimeout(()=>b.style.display='none',3000);
-  }catch(e){alert('Could not save: '+e.message);}
+    const gql=`query($s:String,$n:Int){Page(perPage:$n){media(search:$s,type:ANIME,sort:SEARCH_MATCH){id title{romaji english}coverImage{medium}startDate{year}genres}}}`;
+    const r=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:gql,variables:{s:q,n:8}})});
+    const data=await r.json();
+    const items=data?.data?.Page?.media||[];
+    if(!items.length){results.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">No results found.</div>';return;}
+    results.innerHTML=items.map(m=>`
+      <div class="search-result">
+        <img class="search-result-img" src="${m.coverImage?.medium||''}" loading="lazy" onerror="this.style.display='none'">
+        <div class="search-result-info">
+          <div class="search-result-title">${m.title.english||m.title.romaji}</div>
+          <div class="search-result-meta">${m.startDate?.year||''}${(m.genres||[]).slice(0,2).length?' · '+(m.genres||[]).slice(0,2).join(', '):''}</div>
+        </div>
+      </div>`).join('');
+  }catch{results.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">Could not reach AniList.</div>';}
 }
 
-// ─── State ──────────────────────────────────────────────────
+async function searchUsers(q){
+  const results=document.getElementById('searchResults');
+  if(!q)return;
+  try{
+    const snap=await db.collection('users')
+      .where('displayNameLower','>=',q.toLowerCase())
+      .where('displayNameLower','<=',q.toLowerCase()+'')
+      .limit(10).get();
+    if(snap.empty){results.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">No users found.</div>';return;}
+    results.innerHTML=snap.docs.map(doc=>{
+      const d=doc.data();
+      const initials=(d.displayName||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const avatar=d.photoURL?`<img src="${d.photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:`<span>${initials}</span>`;
+      return`<div class="user-result"><div class="user-result-avatar">${avatar}</div><div><div style="font-size:.875rem;font-weight:600">${d.displayName||'Unknown'}</div></div></div>`;
+    }).join('');
+  }catch{results.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">Search failed.</div>';}
+}
+
+// ─── Profile ─────────────────────────────────────────────────
+async function loadProfile(){
+  const content=document.getElementById('profileContent');
+  const signedOut=document.getElementById('profileSignedOut');
+  if(!currentUser){content.classList.add('hidden');signedOut.classList.remove('hidden');return;}
+  content.classList.remove('hidden');signedOut.classList.add('hidden');
+
+  // Set avatar + name
+  const av=document.getElementById('profileAvatar');
+  av.innerHTML=currentUser.photoURL?`<img src="${currentUser.photoURL}" style="width:100%;height:100%;object-fit:cover">`:(currentUser.displayName||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('profileName').textContent=currentUser.displayName||'You';
+  document.getElementById('profileHandle').textContent=currentUser.email||'';
+
+  // Load stats + top shows
+  try{
+    const snap=await db.collection('rankings').where('uid','==',currentUser.uid).get();
+    const lists=snap.size;
+    let allShows=[], totalShows=0;
+    snap.forEach(doc=>{
+      const d=doc.data();
+      totalShows+=(d.scored||[]).length;
+      (d.scored||[]).forEach(s=>allShows.push(s));
+    });
+    const avgScore=allShows.length?allShows.reduce((a,s)=>a+(s.score||0),0)/allShows.length:0;
+    document.getElementById('statLists').textContent=lists;
+    document.getElementById('statShows').textContent=totalShows;
+    document.getElementById('statAvg').textContent=avgScore>0?avgScore.toFixed(1):'—';
+
+    // Top 10 shows across all lists (deduplicated by name, highest score wins)
+    const seen=new Map();
+    allShows.forEach(s=>{
+      const key=s.name.toLowerCase();
+      if(!seen.has(key)||seen.get(key).score<s.score)seen.set(key,s);
+    });
+    const top10=[...seen.values()].sort((a,b)=>b.score-a.score).slice(0,10);
+    const topList=document.getElementById('topShowsList');
+    const topEmpty=document.getElementById('topShowsEmpty');
+    if(!top10.length){topEmpty.classList.remove('hidden');topList.innerHTML='';return;}
+    topEmpty.classList.add('hidden');
+    topList.innerHTML=top10.map((s,i)=>`
+      <div class="top-show-row">
+        <span class="top-rank">#${i+1}</span>
+        <span class="top-name">${s.name}</span>
+        <span class="top-score">${s.score?.toFixed(1)}</span>
+      </div>`).join('');
+  }catch(e){console.error(e);}
+}
+
+// ─── Ranking Flow ────────────────────────────────────────────
 let shows=[],sortedList=[],comparisons=[],currentComparison=null;
 let totalCmps=0,doneCmps=0,calBounds=[],nextCalAt=4;
 let anchorFavoriteId=null,anchorWorstId=null,anchorStep=0;
 
 const BUCKETS=[
-  {label:'1 – 3',desc:'Not for me',   min:1, max:3,  mid:2  },
-  {label:'4 – 6',desc:'Pretty average',min:4,max:6,  mid:5  },
-  {label:'7 – 8',desc:'Solid / good', min:7, max:8,  mid:7.5},
-  {label:'9 – 10',desc:'Amazing',     min:9, max:10, mid:9.5},
+  {label:'1 – 3',desc:'Not for me',   min:1,max:3, mid:2  },
+  {label:'4 – 6',desc:'Pretty average',min:4,max:6,mid:5  },
+  {label:'7 – 8',desc:'Solid / good', min:7,max:8, mid:7.5},
+  {label:'9 – 10',desc:'Amazing',     min:9,max:10,mid:9.5},
 ];
 
-// ─── Input ──────────────────────────────────────────────────
+const ANCHOR_QS=[
+  {lbl:'Question 1 of 4',q:'What is your absolute favorite show on this list?',hint:"We'll ask where it sits on the scale next."},
+  {lbl:'Question 2 of 4',q:null,hint:'This sets the top of your score range.',isBucketFavorite:true},
+  {lbl:'Question 3 of 4',q:'Which show did you enjoy the least?',hint:"Your least favorite — we'll calibrate its score too."},
+  {lbl:'Question 4 of 4',q:null,hint:'This sets the bottom of your score range.',isBucket:true},
+];
+
+function resetRankingState(){
+  shows=[];sortedList=[];comparisons=[];currentComparison=null;
+  totalCmps=0;doneCmps=0;calBounds=[];nextCalAt=4;
+  anchorFavoriteId=null;anchorWorstId=null;anchorStep=0;
+  // Reset sub-views
+  showRV('rv-input');
+  document.getElementById('pasteArea').value='';
+  document.getElementById('inputShowsCard').classList.add('hidden');
+  document.getElementById('showChips').innerHTML='';
+  document.getElementById('addShowForm').classList.add('hidden');
+  document.getElementById('saveRankingBtn').style.display=currentUser?'inline-flex':'none';
+}
+
+function startNewRanking(){
+  resetRankingState();
+  enterRankingMode();
+}
+
+function showRV(id){
+  ['rv-input','rv-anchors','rv-compare','rv-results'].forEach(r=>document.getElementById(r).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
 function addFromPaste(){
   const text=document.getElementById('pasteArea').value.trim();
   if(!text)return;
   text.split('\n').map(l=>l.trim()).filter(Boolean).forEach(name=>{
     if(!shows.find(s=>s.name.toLowerCase()===name.toLowerCase()))shows.push({id:Math.random(),name});
   });
-  document.getElementById('pasteArea').value='';renderChips();
+  document.getElementById('pasteArea').value='';
+  renderChips();
 }
 function removeShow(id){shows=shows.filter(s=>s.id!==id);renderChips();}
 function renderChips(){
-  const card=document.getElementById('showListCard');
+  const card=document.getElementById('inputShowsCard');
   if(!shows.length){card.classList.add('hidden');return;}
   card.classList.remove('hidden');
   document.getElementById('showCount').textContent=`(${shows.length})`;
   document.getElementById('showChips').innerHTML=shows.map(s=>`<span class="chip">${s.name}<button class="chip-rm" onclick="removeShow(${s.id})">×</button></span>`).join('');
 }
 
-// ─── Anchors ────────────────────────────────────────────────
-const ANCHOR_QS=[
-  {lbl:'Question 1 of 4',q:'What is your absolute favorite show on this list?',hint:"Pick your #1 — we'll ask where it sits on the scale next."},
-  {lbl:'Question 2 of 4',q:null,hint:'This sets the top of your score range.',isBucketFavorite:true},
-  {lbl:'Question 3 of 4',q:'Which show did you enjoy the least?',hint:"Pick your least favorite — we'll calibrate its score too."},
-  {lbl:'Question 4 of 4',q:null,hint:'This sets the bottom of your score range.',isBucket:true},
-];
-
 function goToAnchors(){
-  if(shows.length<2){alert('Add at least 2 shows!');return;}
-  hide('phaseInput');anchorStep=0;anchorFavoriteId=null;anchorWorstId=null;
-  show('phaseAnchors');renderAnchorQ();
+  if(shows.length<2){toast('Add at least 2 shows!');return;}
+  anchorStep=0;anchorFavoriteId=null;anchorWorstId=null;calBounds=[];
+  showRV('rv-anchors');renderAnchorQ();
 }
 
 function renderAnchorQ(){
   const aq=ANCHOR_QS[anchorStep];
   document.getElementById('anchorStepLbl').textContent=aq.lbl;
   document.getElementById('anchorHint').textContent=aq.hint;
-
   if(aq.isBucketFavorite){
-    const favShow=shows.find(s=>s.id===anchorFavoriteId);
-    document.getElementById('anchorQ').textContent=`Where would you place "${favShow?.name}" overall?`;
-    document.getElementById('anchorChips').innerHTML=`<div class="bucket-grid" style="width:100%;margin-top:8px">${BUCKETS.map(b=>
-      `<div class="bucket-btn" onclick="pickAnchorBucketFav(${b.min},${b.max},${b.mid})">
-        <div class="bucket-label">${b.label}</div>
-        <div class="bucket-desc">${b.desc}</div>
-      </div>`
-    ).join('')}</div>`;
+    const fav=shows.find(s=>s.id===anchorFavoriteId);
+    document.getElementById('anchorQ').textContent=`Where would you place "${fav?.name}" overall?`;
+    document.getElementById('anchorChips').innerHTML=`<div class="bucket-grid" style="width:100%">${BUCKETS.map(b=>`<div class="bucket-btn" onclick="pickAnchorBucketFav(${b.min},${b.max},${b.mid})"><div class="bucket-label">${b.label}</div><div class="bucket-desc">${b.desc}</div></div>`).join('')}</div>`;
   } else if(aq.isBucket){
-    // Ask bucket question about the worst show
-    const worstShow=shows.find(s=>s.id===anchorWorstId);
-    document.getElementById('anchorQ').textContent=`Where would you place "${worstShow?.name}" overall?`;
-    document.getElementById('anchorChips').innerHTML=`<div class="bucket-grid" style="width:100%;margin-top:8px">${BUCKETS.map(b=>
-      `<div class="bucket-btn" onclick="pickAnchorBucket(${b.min},${b.max},${b.mid})">
-        <div class="bucket-label">${b.label}</div>
-        <div class="bucket-desc">${b.desc}</div>
-      </div>`
-    ).join('')}</div>`;
+    const worst=shows.find(s=>s.id===anchorWorstId);
+    document.getElementById('anchorQ').textContent=`Where would you place "${worst?.name}" overall?`;
+    document.getElementById('anchorChips').innerHTML=`<div class="bucket-grid" style="width:100%">${BUCKETS.map(b=>`<div class="bucket-btn" onclick="pickAnchorBucket(${b.min},${b.max},${b.mid})"><div class="bucket-label">${b.label}</div><div class="bucket-desc">${b.desc}</div></div>`).join('')}</div>`;
   } else {
     document.getElementById('anchorQ').textContent=aq.q;
-    const excluded=anchorStep===1?anchorFavoriteId:null;
-    document.getElementById('anchorChips').innerHTML=shows.filter(s=>s.id!==excluded).map(s=>
-      `<div class="anchor-chip" onclick="pickAnchor(${s.id})">${s.name}</div>`
-    ).join('');
+    const excl=anchorStep===2?anchorFavoriteId:null;
+    document.getElementById('anchorChips').innerHTML=shows.filter(s=>s.id!==excl).map(s=>`<div class="anchor-chip" onclick="pickAnchor(${s.id})">${s.name}</div>`).join('');
   }
 }
 
+function pickAnchor(id){
+  document.querySelectorAll('.anchor-chip').forEach(c=>c.classList.toggle('selected',c.getAttribute('onclick').includes('('+id+')')));
+  if(anchorStep===0){anchorFavoriteId=id;setTimeout(()=>{anchorStep=1;renderAnchorQ();},350);}
+  else if(anchorStep===2){anchorWorstId=id;setTimeout(()=>{anchorStep=3;renderAnchorQ();},350);}
+}
 function pickAnchorBucketFav(min,max,mid){
   calBounds.push({showId:anchorFavoriteId,min,max,mid});
   setTimeout(()=>{anchorStep=2;renderAnchorQ();},200);
 }
-
 function pickAnchorBucket(min,max,mid){
   calBounds.push({showId:anchorWorstId,min,max,mid});
-  setTimeout(()=>{hide('phaseAnchors');startRanking();},200);
+  setTimeout(()=>{showRV('rv-compare');startSort();},200);
 }
 
-function pickAnchor(id){
-  document.querySelectorAll('.anchor-chip').forEach(c=>{
-    c.classList.toggle('selected',c.getAttribute('onclick').includes('('+id+')'));
-  });
-  if(anchorStep===0){anchorFavoriteId=id;setTimeout(()=>{anchorStep=1;renderAnchorQ();},350);}
-  else if(anchorStep===2){anchorWorstId=id;setTimeout(()=>{anchorStep=3;renderAnchorQ();},350);}
-}
-
-// ─── Ranking ────────────────────────────────────────────────
-function startRanking(){
-  show('phaseRank');
+function startSort(){
   totalCmps=Math.ceil(shows.length*Math.log2(Math.max(shows.length,2)));
-  doneCmps=0;calBounds=[];nextCalAt=4;
+  doneCmps=0;nextCalAt=4;
+  document.getElementById('progBar').style.width='0%';
+  document.getElementById('headerTitle').textContent='Ranking';
   runSort();
 }
 
-async function runSort(){sortedList=await mergeSort([...shows]);showResults();}
+async function runSort(){sortedList=await mergeSort([...shows]);finishRanking();}
 
 async function mergeSort(arr){
   if(arr.length<=1)return arr;
   const m=Math.floor(arr.length/2);
   return mergeFn(await mergeSort(arr.slice(0,m)),await mergeSort(arr.slice(m)));
 }
-
 async function mergeFn(L,R){
   const res=[];let i=0,j=0;
   while(i<L.length&&j<R.length){
@@ -387,22 +775,19 @@ async function mergeFn(L,R){
   }
   return res.concat(L.slice(i)).concat(R.slice(j));
 }
-
 function askCmp(a,b){
   return new Promise(resolve=>{
     comparisons.push({type:'cmp',a,b,resolve});
     if(!currentComparison)nextStep();
   });
 }
-
 function nextStep(){
   if(!comparisons.length)return;
   currentComparison=comparisons.shift();
   currentComparison.type==='cal'?showCal(currentComparison):showCmp(currentComparison);
 }
-
 function showCmp(c){
-  hide('calBlock');show('cmpBlock');
+  hideEl('calBlock');showEl('cmpBlock');
   document.getElementById('cmpTitle').textContent='Which did you enjoy more?';
   document.getElementById('vsA').textContent=c.a.name;
   document.getElementById('vsB').textContent=c.b.name;
@@ -410,30 +795,21 @@ function showCmp(c){
   document.getElementById('progBar').style.width=Math.min(100,Math.round((doneCmps/totalCmps)*100))+'%';
   document.getElementById('cmpHint').textContent=`Comparison ${doneCmps} of ~${totalCmps}`;
   document.getElementById('phaseLbl').textContent='Ranking';
-  // Inject calibration every 4 comparisons
   if(doneCmps===nextCalAt){nextCalAt+=4;comparisons.unshift({type:'cal',show:c.a});}
 }
-
 function showCal(c){
-  hide('cmpBlock');show('calBlock');
+  hideEl('cmpBlock');showEl('calBlock');
   document.getElementById('phaseLbl').textContent='Score check';
   document.getElementById('calQ').textContent=`Where would you place "${c.show.name}" overall?`;
-  document.getElementById('bucketGrid').innerHTML=BUCKETS.map(b=>
-    `<div class="bucket-btn" onclick="answerCal(${c.show.id},${b.min},${b.max},${b.mid})">
-      <div class="bucket-label">${b.label}</div>
-      <div class="bucket-desc">${b.desc}</div>
-    </div>`
-  ).join('');
+  document.getElementById('bucketGrid').innerHTML=BUCKETS.map(b=>`<div class="bucket-btn" onclick="answerCal(${c.show.id},${b.min},${b.max},${b.mid})"><div class="bucket-label">${b.label}</div><div class="bucket-desc">${b.desc}</div></div>`).join('');
 }
-
 function pick(side){
   if(!currentComparison||currentComparison.type!=='cmp')return;
   const winner=side==='A'?currentComparison.a:currentComparison.b;
-  const resolve=currentComparison.resolve;
-  currentComparison=null;resolve(winner);
+  const r=currentComparison.resolve;
+  currentComparison=null;r(winner);
   if(comparisons.length)nextStep();
 }
-
 function answerCal(showId,min,max,mid){
   if(!currentComparison||currentComparison.type!=='cal')return;
   calBounds.push({showId,min,max,mid});
@@ -441,28 +817,20 @@ function answerCal(showId,min,max,mid){
   if(comparisons.length)nextStep();
 }
 
-// ─── Add a show (binary search insertion) ───────────────────
-function toggleAddForm(){
-  const f=document.getElementById('addShowForm');
-  f.classList.toggle('hidden');
-  if(!f.classList.contains('hidden'))document.getElementById('newShowInput').focus();
-}
-
+// ─── Add show (insert) ───────────────────────────────────────
 async function insertShow(){
   const name=document.getElementById('newShowInput').value.trim();
-  if(!name){alert('Enter a show name.');return;}
-  if(sortedList.find(s=>s.name.toLowerCase()===name.toLowerCase())){alert('That show is already in your list.');return;}
+  if(!name){toast('Enter a show name.');return;}
+  if(sortedList.find(s=>s.name.toLowerCase()===name.toLowerCase())){toast('Already in list.');return;}
   const newShow={id:Math.random(),name,isNew:true};
-  hide('addShowForm');
-  hide('phaseResults');
-  show('phaseRank');
+  hideEl('addShowForm');
+  showRV('rv-compare');
   document.getElementById('phaseLbl').textContent='Adding show';
   document.getElementById('progBar').style.width='0%';
-  hide('calBlock');show('cmpBlock');
+  hideEl('calBlock');showEl('cmpBlock');
   document.getElementById('cmpTitle').textContent='Which did you enjoy more?';
   document.getElementById('cmpHint').textContent='';
 
-  // Binary search
   let lo=0,hi=sortedList.length,steps=0;
   const maxSteps=Math.ceil(Math.log2(Math.max(sortedList.length,1)))+2;
   while(lo<hi&&steps<maxSteps){
@@ -479,153 +847,144 @@ async function insertShow(){
     if(winner==='new')hi=mid;else lo=mid+1;
     steps++;
   }
-  document.getElementById('progBar').style.width='80%';
-
-  // Ask one bucket question
-  hide('cmpBlock');show('calBlock');
+  document.getElementById('progBar').style.width='85%';
+  hideEl('cmpBlock');showEl('calBlock');
   document.getElementById('phaseLbl').textContent='Score check';
   document.getElementById('calQ').textContent=`Where would you place "${name}" overall?`;
-  document.getElementById('bucketGrid').innerHTML=BUCKETS.map(b=>
-    `<div class="bucket-btn" onclick="finishInsert(${b.min},${b.max},${b.mid})">
-      <div class="bucket-label">${b.label}</div>
-      <div class="bucket-desc">${b.desc}</div>
-    </div>`
-  ).join('');
-
-  // Store position for finishInsert
+  document.getElementById('bucketGrid').innerHTML=BUCKETS.map(b=>`<div class="bucket-btn" onclick="finishInsert(${b.min},${b.max},${b.mid})"><div class="bucket-label">${b.label}</div><div class="bucket-desc">${b.desc}</div></div>`).join('');
   window._insertPos=lo;window._insertShow=newShow;
 }
 
 function finishInsert(min,max,mid){
-  const showId=window._insertShow.id;
-  calBounds.push({showId,min,max,mid});
-  const pos=window._insertPos,s=window._insertShow;
-  sortedList.splice(pos,0,s);
+  const s=window._insertShow;
+  calBounds.push({showId:s.id,min,max,mid});
+  sortedList.splice(window._insertPos,0,s);
   shows.push(s);
-  hide('calBlock');hide('phaseRank');
   document.getElementById('newShowInput').value='';
-  document.getElementById('progBar').style.width='100%';
-  showResults();
+  showRV('rv-results');
+  renderResults(computeScores(sortedList));
 }
 
-// ─── Scoring ────────────────────────────────────────────────
+// ─── Scoring ─────────────────────────────────────────────────
 function computeScores(ranked){
   const n=ranked.length;
-  const MAX_SLOPE=0.12; // max score drop per rank — keeps shows clustered unless cal says otherwise
-
-  // Build anchor points: {rank, score} using bucket midpoints
+  const MAX_SLOPE=0.12;
   let pts=[];
-
   if(anchorFavoriteId!=null){
     const r=ranked.findIndex(s=>s.id===anchorFavoriteId);
-    if(r>=0){
-      const cb=calBounds.find(b=>b.showId===anchorFavoriteId);
-      pts.push({rank:r,score:cb?cb.mid:9.5});
-    }
+    if(r>=0){const cb=calBounds.find(b=>b.showId===anchorFavoriteId);pts.push({rank:r,score:cb?cb.mid:9.5});}
   }
   if(anchorWorstId!=null){
     const r=ranked.findIndex(s=>s.id===anchorWorstId);
-    if(r>=0){
-      const cb=calBounds.find(b=>b.showId===anchorWorstId);
-      pts.push({rank:r,score:cb?cb.mid:2});
-    }
+    if(r>=0){const cb=calBounds.find(b=>b.showId===anchorWorstId);pts.push({rank:r,score:cb?cb.mid:2});}
   }
   calBounds.forEach(({showId,mid})=>{
     if(showId===anchorFavoriteId||showId===anchorWorstId)return;
     const r=ranked.findIndex(s=>s.id===showId);
     if(r>=0)pts.push({rank:r,score:mid});
   });
-
-  // Sort by rank ascending
   pts.sort((a,b)=>a.rank-b.rank);
-  // Backward pass FIRST: if a lower-ranked show has a higher bucket score,
-  // raise the show above it (propagates floors upward)
-  for(let i=pts.length-2;i>=0;i--){
-    if(pts[i].score<=pts[i+1].score) pts[i].score=pts[i+1].score+0.2;
-  }
-  // Forward pass: cap any that still violate descending order
-  for(let i=1;i<pts.length;i++){
-    if(pts[i].score>=pts[i-1].score) pts[i].score=pts[i-1].score-0.2;
-  }
-
-  // Deduplicate by rank
-  const seen=new Set();
-  pts=pts.filter(p=>{if(seen.has(p.rank))return false;seen.add(p.rank);return true;});
-
-  // Extend edges with gentle slope
+  // Backward pass first (propagate floors up)
+  for(let i=pts.length-2;i>=0;i--){if(pts[i].score<=pts[i+1].score)pts[i].score=pts[i+1].score+0.2;}
+  // Forward pass
+  for(let i=1;i<pts.length;i++){if(pts[i].score>=pts[i-1].score)pts[i].score=pts[i-1].score-0.2;}
+  pts.forEach(p=>p.score=Math.min(10,Math.max(0.5,p.score)));
+  const seen=new Set();pts=pts.filter(p=>{if(seen.has(p.rank))return false;seen.add(p.rank);return true;});
   if(!pts.length){
     pts=[{rank:0,score:8.5},{rank:n-1,score:Math.max(0.5,8.5-MAX_SLOPE*(n-1))}];
   } else {
-    if(pts[0].rank>0)
-      pts.unshift({rank:0,score:Math.min(10,pts[0].score+MAX_SLOPE*pts[0].rank)});
-    if(pts[pts.length-1].rank<n-1)
-      pts.push({rank:n-1,score:Math.max(0.5,pts[pts.length-1].score-MAX_SLOPE*(n-1-pts[pts.length-1].rank))});
+    if(pts[0].rank>0)pts.unshift({rank:0,score:Math.min(10,pts[0].score+MAX_SLOPE*pts[0].rank)});
+    if(pts[pts.length-1].rank<n-1)pts.push({rank:n-1,score:Math.max(0.5,pts[pts.length-1].score-MAX_SLOPE*(n-1-pts[pts.length-1].rank))});
   }
-  pts[0].score=Math.min(10,pts[0].score);
-  pts[pts.length-1].score=Math.max(0.5,pts[pts.length-1].score);
-
-  // Interpolation: use gentle slope between anchor points
-  // Scores only drop as fast as the data requires, capped at MAX_SLOPE per rank
   function interp(rank){
     if(rank<=pts[0].rank)return pts[0].score;
     if(rank>=pts[pts.length-1].rank)return pts[pts.length-1].score;
     for(let i=0;i<pts.length-1;i++){
       if(rank>=pts[i].rank&&rank<=pts[i+1].rank){
         const span=pts[i+1].rank-pts[i].rank;
-        const naturalSlope=(pts[i].score-pts[i+1].score)/span;
-        const slope=Math.min(naturalSlope,MAX_SLOPE);
-        return Math.max(pts[i+1].score, pts[i].score-slope*(rank-pts[i].rank));
+        const ns=(pts[i].score-pts[i+1].score)/span;
+        const sl=Math.min(ns,MAX_SLOPE);
+        return Math.max(pts[i+1].score,pts[i].score-sl*(rank-pts[i].rank));
       }
     }
     return 5;
   }
-
   const result=ranked.map((s,i)=>({...s,score:Math.round(Math.min(10,Math.max(0.5,interp(i)))*10)/10}));
-  // Final pass: guarantee rank order always beats bucket score
   for(let i=1;i<result.length;i++){
-    if(result[i].score>=result[i-1].score){
-      result[i].score=Math.max(0.5,Math.round((result[i-1].score-0.1)*10)/10);
-    }
+    if(result[i].score>=result[i-1].score)result[i].score=Math.max(0.5,Math.round((result[i-1].score-0.1)*10)/10);
   }
   return result;
 }
 
-// ─── Results ────────────────────────────────────────────────
-function showResults(){
-  hide('phaseRank');show('phaseResults');
-  document.getElementById('resultSub').textContent=
-    `${sortedList.length} shows ranked · ${calBounds.length} calibration point${calBounds.length!==1?'s':''} used`;
+function finishRanking(){
+  showRV('rv-results');
+  document.getElementById('headerTitle').textContent='Results';
+  document.getElementById('saveRankingBtn').style.display=currentUser?'inline-flex':'none';
   renderResults(computeScores(sortedList));
 }
 
 function renderResults(scored){
+  document.getElementById('resultSub').textContent=`${scored.length} shows · ${calBounds.length} calibration point${calBounds.length!==1?'s':''} used`;
   document.getElementById('resultList').innerHTML=scored.map((s,i)=>`
     <div class="result-row">
       <span class="rk">#${i+1}</span>
-      <span class="r-title">${s.name}${s.isNew?' <span style="font-size:.7rem;background:#d1fae5;color:#065f46;border-radius:4px;padding:1px 6px;margin-left:4px">new</span>':''}</span>
-      <span class="score${s.isNew?' new':''}">${s.score.toFixed(1)}</span>
+      <span class="r-title">${s.name}${s.isNew?'<span style="font-size:.65rem;background:#d1fae5;color:#065f46;border-radius:4px;padding:1px 5px;margin-left:5px">new</span>':''}</span>
+      <span class="score-badge${s.isNew?' new-show':''}">${s.score.toFixed(1)}</span>
     </div>`).join('');
+}
+
+function toggleEl(id){document.getElementById(id).classList.toggle('hidden');}
+function showEl(id){document.getElementById(id).classList.remove('hidden');}
+function hideEl(id){document.getElementById(id).classList.add('hidden');}
+
+async function saveRanking(){
+  if(!currentUser){signIn();return;}
+  const scored=computeScores(sortedList);
+  const name=prompt('Name this ranking:','My Anime Ranking')||'My Anime Ranking';
+  try{
+    await db.collection('rankings').add({
+      uid:currentUser.uid,
+      userName:currentUser.displayName||'Anonymous',
+      userPhoto:currentUser.photoURL||'',
+      name,shows:sortedList,scored,calBounds,
+      anchorFavoriteId,anchorWorstId,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // Update user stats doc
+    await db.collection('users').doc(currentUser.uid).set({
+      totalLists:firebase.firestore.FieldValue.increment(1),
+      totalShows:firebase.firestore.FieldValue.increment(sortedList.length)
+    },{merge:true});
+    toast('✓ Ranking saved!');
+    document.getElementById('saveRankingBtn').style.display='none';
+  }catch(e){toast('Could not save: '+e.message);}
 }
 
 function copyResults(){
   const scored=computeScores(sortedList);
-  navigator.clipboard.writeText(scored.map((s,i)=>`#${i+1} ${s.name} — ${s.score.toFixed(1)}/10`).join('\n')).then(()=>alert('Copied!'));
+  navigator.clipboard.writeText(scored.map((s,i)=>`#${i+1} ${s.name} — ${s.score.toFixed(1)}/10`).join('\n')).then(()=>toast('Copied to clipboard!'));
 }
 
-function restart(){
-  shows=[];sortedList=[];comparisons=[];currentComparison=null;
-  doneCmps=0;calBounds=[];nextCalAt=4;anchorFavoriteId=null;anchorWorstId=null;
-  hide('phaseResults');
-  if(currentUser)showSavedRankings();else show('phaseInput');
+// ─── Toast ───────────────────────────────────────────────────
+function toast(msg,dur=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>t.style.display='none',dur);
 }
 
-// ─── Helpers ────────────────────────────────────────────────
-const PHASES=['phaseAuth','phaseSaved','phaseInput','phaseAnchors','phaseRank','phaseResults'];
-function hideAll(){PHASES.forEach(p=>document.getElementById(p).classList.add('hidden'));}
-function show(id){document.getElementById(id).classList.remove('hidden');}
-function hide(id){document.getElementById(id).classList.add('hidden');}
+function refreshCurrentView(){
+  const v=currentView;
+  if(v==='feed')loadFeed();
+  else if(v==='lists')loadMyLists();
+  else if(v==='profile')loadProfile();
+  else if(v==='ranking'){
+    document.getElementById('saveRankingBtn').style.display=currentUser?'inline-flex':'none';
+  }
+}
 
-hideAll();show('phaseAuth');
+// ─── Init ────────────────────────────────────────────────────
+navTo('feed');
 </script>
 </body>
 </html>

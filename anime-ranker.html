@@ -147,6 +147,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
 input[type=text]{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 14px;font-size:.875rem;font-family:inherit;outline:none;background:var(--surface);color:var(--text)}
 input[type=text]:focus{border-color:var(--accent)}
 .hidden{display:none!important}
+/* Context menu */
+.ctx-menu{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:500;min-width:160px;overflow:hidden;display:none}
+.ctx-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:.875rem;font-weight:500;cursor:pointer;transition:background .1s}
+.ctx-item:hover{background:var(--bg)}
+.ctx-item.danger{color:var(--danger)}
+.ctx-divider{height:1px;background:var(--border)}
+/* Confirm dialog */
+.dialog-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:600;display:none;align-items:center;justify-content:center}
+.dialog-box{background:var(--surface);border-radius:var(--radius);padding:24px;margin:20px;max-width:320px;width:100%}
+.dialog-title{font-size:1rem;font-weight:700;margin-bottom:8px}
+.dialog-msg{font-size:.875rem;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.dialog-actions{display:flex;gap:8px;justify-content:flex-end}
+/* Share modal */
+.share-link-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:.78rem;font-family:monospace;word-break:break-all;margin-bottom:14px;color:var(--text)}
+/* Three-dot button on list cards */
+.list-card-menu{background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;padding:4px 8px;border-radius:6px;flex-shrink:0;line-height:1}
+.list-card-menu:hover{background:var(--bg);color:var(--text)}
 /* Resolve preview */
 .resolve-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:6px}
 .resolve-cover{width:32px;height:44px;border-radius:5px;object-fit:cover;background:var(--border);flex-shrink:0}
@@ -464,6 +481,44 @@ input[type=text]:focus{border-color:var(--accent)}
 
 <div class="success-toast" id="toast"></div>
 
+<!-- Context menu -->
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" onclick="ctxShare()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    Share
+  </div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item danger" onclick="ctxDelete()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+    Delete
+  </div>
+</div>
+
+<!-- Confirm delete dialog -->
+<div class="dialog-overlay" id="deleteDialog" onclick="closeDeleteDialog()">
+  <div class="dialog-box" onclick="event.stopPropagation()">
+    <div class="dialog-title">Delete this ranking?</div>
+    <div class="dialog-msg" id="deleteDialogMsg"></div>
+    <div class="dialog-actions">
+      <button class="btn-outline" style="border-radius:8px;padding:8px 16px;font-size:.875rem;font-weight:600;cursor:pointer" onclick="closeDeleteDialog()">Cancel</button>
+      <button class="btn btn-red btn-sm" onclick="confirmDelete()" style="margin-top:0">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share modal -->
+<div class="dialog-overlay" id="shareDialog" onclick="closeShareDialog()">
+  <div class="dialog-box" onclick="event.stopPropagation()">
+    <div class="dialog-title">Share this ranking</div>
+    <div class="dialog-msg">Anyone with this link can view the full ranking.</div>
+    <div class="share-link-box" id="shareLinkText"></div>
+    <div class="dialog-actions">
+      <button class="btn-outline" style="border-radius:8px;padding:8px 16px;font-size:.875rem;font-weight:600;cursor:pointer" onclick="closeShareDialog()">Close</button>
+      <button class="btn btn-accent btn-sm" onclick="copyShareLink()" style="margin-top:0">Copy Link</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -607,8 +662,10 @@ async function loadMyLists(){
       el.className='list-card';
       const date=d.createdAt?.toDate?d.createdAt.toDate().toLocaleDateString():'';
       const top3=(d.scored||[]).slice(0,3).map(s=>s.name).join(', ');
-      el.innerHTML=`<div class="list-card-info"><div class="list-card-title">${d.name||'Ranking'}</div><div class="list-card-meta">${(d.scored||[]).length} shows · ${date}</div>${top3?`<div class="list-card-top">🥇 ${top3}</div>`:''}</div><span class="list-arrow">›</span>`;
-      el.onclick=()=>viewRankingDetail(doc.id);
+      const safeId=doc.id;
+      el.innerHTML=`<div class="list-card-info"><div class="list-card-title">${d.name||'Ranking'}</div><div class="list-card-meta">${(d.scored||[]).length} shows · ${date}</div>${top3?`<div class="list-card-top">🥇 ${top3}</div>`:''}</div><button class="list-card-menu" onclick="event.stopPropagation();openCtxForDoc('${safeId}','${(d.name||'Ranking').replace(/'/g,"\\'")}',event)" title="Options">⋯</button>`;
+      el.onclick=()=>viewRankingDetail(safeId);
+      el.addEventListener('contextmenu',e=>{e.preventDefault();openCtxForDoc(safeId,d.name||'Ranking',e);});
       list.appendChild(el);
     });
   }catch(e){list.innerHTML='<div class="empty-state"><p>Could not load lists.</p></div>';}
@@ -1557,6 +1614,57 @@ async function viewShowDetail(show){
   }catch(e){document.getElementById('sdSeenText').textContent='Could not load data.';}
 }
 
+// ─── Context menu ────────────────────────────────────────────
+let _ctxDocId=null, _ctxDocName='';
+
+function openCtxForDoc(id, name, e){
+  _ctxDocId=id; _ctxDocName=name;
+  const menu=document.getElementById('ctxMenu');
+  menu.style.display='block';
+  // Position near click, keep within viewport
+  const x=Math.min(e.clientX, window.innerWidth-180);
+  const y=Math.min(e.clientY, window.innerHeight-100);
+  menu.style.left=x+'px';
+  menu.style.top=y+'px';
+}
+
+function closeCtxMenu(){document.getElementById('ctxMenu').style.display='none';}
+document.addEventListener('click',()=>closeCtxMenu());
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCtxMenu();closeDeleteDialog();closeShareDialog();}});
+
+function ctxDelete(){
+  closeCtxMenu();
+  document.getElementById('deleteDialogMsg').textContent=`"${_ctxDocName}" will be permanently deleted. This cannot be undone.`;
+  document.getElementById('deleteDialog').style.display='flex';
+}
+
+async function confirmDelete(){
+  if(!_ctxDocId)return;
+  try{
+    await db.collection('rankings').doc(_ctxDocId).delete();
+    closeDeleteDialog();
+    toast('Ranking deleted.');
+    loadMyLists();
+  }catch(e){toast('Could not delete: '+e.message);}
+}
+
+function closeDeleteDialog(){document.getElementById('deleteDialog').style.display='none';}
+
+function ctxShare(){
+  closeCtxMenu();
+  const base=window.location.origin+window.location.pathname;
+  const link=`${base}?ranking=${_ctxDocId}`;
+  document.getElementById('shareLinkText').textContent=link;
+  document.getElementById('shareDialog').style.display='flex';
+}
+
+function copyShareLink(){
+  const link=document.getElementById('shareLinkText').textContent;
+  navigator.clipboard.writeText(link).then(()=>{toast('Link copied!');closeShareDialog();});
+}
+
+function closeShareDialog(){document.getElementById('shareDialog').style.display='none';}
+
 // ─── Toast ───────────────────────────────────────────────────
 function toast(msg,dur=2500){
   const t=document.getElementById('toast');
@@ -1576,7 +1684,15 @@ function refreshCurrentView(){
 }
 
 // ─── Init ────────────────────────────────────────────────────
-navTo('feed');
+const _urlParams=new URLSearchParams(window.location.search);
+const _sharedRankingId=_urlParams.get('ranking');
+if(_sharedRankingId){
+  // Load shared ranking directly
+  navTo('feed');
+  setTimeout(()=>viewRankingDetail(_sharedRankingId),800);
+} else {
+  navTo('feed');
+}
 </script>
 </body>
 </html>

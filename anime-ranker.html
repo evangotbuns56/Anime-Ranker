@@ -241,6 +241,10 @@ input[type=text]:focus{border-color:var(--accent)}
     </div>
     <div id="listsContent" class="hidden">
       <button class="btn btn-accent new-ranking-btn" onclick="startNewRanking()">+ New Ranking</button>
+      <div id="draftSection" class="hidden">
+        <div class="section-title">In Progress</div>
+        <div id="draftsList"></div>
+      </div>
       <div class="section-title">Your Rankings</div>
       <div id="myListsList"></div>
       <div id="myListsEmpty" class="empty-state hidden">
@@ -334,7 +338,10 @@ input[type=text]:focus{border-color:var(--accent)}
     <!-- Sub-view: anchors -->
     <div id="rv-anchors" class="hidden">
       <div class="rank-section">
-        <div class="phase-lbl" id="anchorStepLbl"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+          <div class="phase-lbl" id="anchorStepLbl" style="margin-bottom:0"></div>
+          <button onclick="saveDraft()" style="font-size:.75rem;color:var(--accent);background:var(--accent-light);border:1.5px solid #c7d2fe;border-radius:8px;cursor:pointer;font-weight:700;padding:4px 10px;line-height:1.4">⏸ Save &amp; Exit</button>
+        </div>
         <div style="font-size:1.05rem;font-weight:700;margin-bottom:6px" id="anchorQ"></div>
         <div class="hint" id="anchorHint"></div>
         <div id="anchorChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px"></div>
@@ -344,7 +351,10 @@ input[type=text]:focus{border-color:var(--accent)}
     <!-- Sub-view: comparison + calibration -->
     <div id="rv-compare" class="hidden">
       <div class="rank-section">
-        <div class="phase-lbl" id="phaseLbl">Ranking</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="phase-lbl" id="phaseLbl" style="margin-bottom:0">Ranking</div>
+          <button id="saveDraftBtn" onclick="saveDraft()" style="font-size:.75rem;color:var(--accent);background:var(--accent-light);border:1.5px solid #c7d2fe;border-radius:8px;cursor:pointer;font-weight:700;padding:4px 10px;line-height:1.4">⏸ Save &amp; Exit</button>
+        </div>
         <div class="prog-wrap"><div class="prog-bar" id="progBar" style="width:0%"></div></div>
         <div id="cmpBlock">
           <div style="font-size:1rem;font-weight:700;margin-bottom:4px" id="cmpTitle">Which did you enjoy more?</div>
@@ -629,10 +639,13 @@ function buildFeedCard(id,d){
     ?`<img src="${d.userPhoto}" alt="">`
     :`<span>${initials}</span>`;
   const top5=(d.scored||[]).slice(0,5);
+  const isOwner=currentUser&&d.uid===currentUser.uid;
+  const menuBtn=isOwner?`<button class="list-card-menu" onclick="event.stopPropagation();openCtxForDoc('${id}','${(d.name||'Anime Ranking').replace(/'/g,"\\'")}',event)" title="Options">⋯</button>`:'';
   el.innerHTML=`
     <div class="feed-card-header">
       <div class="feed-avatar">${avatarHtml}</div>
-      <div><div class="feed-user-name">${d.userName||'Anonymous'}</div><div class="feed-meta">${date}</div></div>
+      <div style="flex:1"><div class="feed-user-name">${d.userName||'Anonymous'}</div><div class="feed-meta">${date}</div></div>
+      ${menuBtn}
     </div>
     <div class="feed-ranking-title">${d.name||'Anime Ranking'}</div>
     ${top5.map((s,i)=>`<div class="feed-show-row"><span class="feed-rank">#${i+1}</span><span class="feed-show-name">${s.name}</span><span class="feed-score">${s.score?.toFixed(1)}</span></div>`).join('')}
@@ -649,6 +662,7 @@ async function loadMyLists(){
   const list=document.getElementById('myListsList');
   const empty=document.getElementById('myListsEmpty');
   list.innerHTML=''; empty.classList.add('hidden');
+  loadDrafts();
   try{
     const snap=await db.collection('rankings').where('uid','==',currentUser.uid).limit(30).get();
     if(snap.empty){empty.classList.remove('hidden');return;}
@@ -700,21 +714,25 @@ async function viewRankingDetail(id){
 // ─── Abbreviation map ────────────────────────────────────────
 const ABBREV={
   // ── Mega-popular / Big 3 era ──
-  'op':'One Piece','naruto':'Naruto','bleach':'Bleach','db':'Dragon Ball',
+  'op':'One Piece','one piece':'One Piece','naruto':'Naruto','bleach':'Bleach','db':'Dragon Ball',
   'dbz':'Dragon Ball Z','dbs':'Dragon Ball Super','dbgt':'Dragon Ball GT',
   'ft':'Fairy Tail','fairy tail':'Fairy Tail','bc':'Black Clover','black clover':'Black Clover',
   'dn':'Death Note','death note':'Death Note',
   // ── Shonen heavy hitters ──
-  'jjk':'Jujutsu Kaisen','csm':'Chainsaw Man','chainsaw man':'Chainsaw Man',
-  'ds':'Demon Slayer','kny':'Demon Slayer','kimetsu':'Demon Slayer',
+  'jjk':'Jujutsu Kaisen','jujutsu kaisen':'Jujutsu Kaisen',
+  'csm':'Chainsaw Man','chainsaw man':'Chainsaw Man',
+  'ds':'Demon Slayer: Kimetsu no Yaiba','kny':'Demon Slayer: Kimetsu no Yaiba',
+  'kimetsu':'Demon Slayer: Kimetsu no Yaiba','demon slayer':'Demon Slayer: Kimetsu no Yaiba',
   'mha':'My Hero Academia','bnha':'My Hero Academia','boku no hero':'My Hero Academia',
-  'hxh':'Hunter x Hunter','hunter hunter':'Hunter x Hunter',
+  'my hero academia':'My Hero Academia','my hero':'My Hero Academia',
+  'hxh':'Hunter x Hunter','hunter x hunter':'Hunter x Hunter','hunter hunter':'Hunter x Hunter',
   'aot':'Attack on Titan','snk':'Attack on Titan','shingeki':'Attack on Titan',
-  'fma':'Fullmetal Alchemist','fmab':'Fullmetal Alchemist Brotherhood',
-  'fullmetal':'Fullmetal Alchemist Brotherhood',
-  'tr':'Tokyo Revengers','tokyo rev':'Tokyo Revengers',
+  'attack on titan':'Attack on Titan',
+  'fma':'Fullmetal Alchemist','fmab':'Fullmetal Alchemist: Brotherhood',
+  'fullmetal':'Fullmetal Alchemist: Brotherhood','fullmetal alchemist':'Fullmetal Alchemist: Brotherhood',
+  'tr':'Tokyo Revengers','tokyo rev':'Tokyo Revengers','tokyo revengers':'Tokyo Revengers',
   'bl':'Blue Lock','blue lock':'Blue Lock',
-  'jjba':'JoJos Bizarre Adventure','jojo':'JoJos Bizarre Adventure',
+  'jjba':'JoJos Bizarre Adventure','jojo':'JoJos Bizarre Adventure','jojos bizarre adventure':'JoJos Bizarre Adventure',
   'sbs':'Stardust Crusaders',
   // ── Isekai ──
   'ttigraas':'That Time I Got Reincarnated as a Slime',
@@ -1042,6 +1060,7 @@ async function loadProfile(){
 let shows=[],sortedList=[],comparisons=[],currentComparison=null;
 let totalCmps=0,doneCmps=0,calBounds=[],nextCalAt=4;
 let anchorFavoriteId=null,anchorWorstId=null,anchorStep=0;
+let comparisonLog=[],replayLog=null,_draftDocId=null;
 
 const BUCKETS=[
   {label:'1 – 3',desc:'Not for me',   min:1,max:3, mid:2  },
@@ -1061,6 +1080,7 @@ function resetRankingState(){
   shows=[];sortedList=[];comparisons=[];currentComparison=null;
   totalCmps=0;doneCmps=0;calBounds=[];nextCalAt=4;
   anchorFavoriteId=null;anchorWorstId=null;anchorStep=0;
+  comparisonLog=[];replayLog=null;_draftDocId=null;
   // Reset sub-views
   showRV('rv-input');
   document.getElementById('pasteArea').value='';
@@ -1238,6 +1258,20 @@ async function mergeFn(L,R){
 }
 function askCmp(a,b){
   return new Promise(resolve=>{
+    if(replayLog&&replayLog.length>0){
+      const entry=replayLog.shift();
+      const winner=entry.winnerId===a.id?a:b;
+      comparisonLog.push({aId:a.id,bId:b.id,winnerId:winner.id});
+      doneCmps++;
+      resolve(winner);
+      return;
+    }
+    if(replayLog!==null){
+      // Replay just finished — update UI
+      replayLog=null;
+      document.getElementById('progBar').style.width=Math.min(100,Math.round((doneCmps/totalCmps)*100))+'%';
+      document.getElementById('phaseLbl').textContent='Ranking';
+    }
     comparisons.push({type:'cmp',a,b,resolve});
     if(!currentComparison)nextStep();
   });
@@ -1267,6 +1301,7 @@ function showCal(c){
 function pick(side){
   if(!currentComparison||currentComparison.type!=='cmp')return;
   const winner=side==='A'?currentComparison.a:currentComparison.b;
+  comparisonLog.push({aId:currentComparison.a.id,bId:currentComparison.b.id,winnerId:winner.id});
   const r=currentComparison.resolve;
   currentComparison=null;r(winner);
   if(comparisons.length)nextStep();
@@ -1418,6 +1453,7 @@ async function saveRanking(){
     },{merge:true});
     toast('✓ Ranking saved!');
     document.getElementById('saveRankingBtn').style.display='none';
+    if(_draftDocId){db.collection('drafts').doc(_draftDocId).delete().catch(()=>{});_draftDocId=null;}
   }catch(e){toast('Could not save: '+e.message);}
 }
 
@@ -1614,6 +1650,104 @@ async function viewShowDetail(show){
   }catch(e){document.getElementById('sdSeenText').textContent='Could not load data.';}
 }
 
+// ─── Draft save / resume ─────────────────────────────────────
+async function saveDraft(){
+  if(!currentUser){toast('Sign in to save progress.');return;}
+  const name=prompt('Name this ranking:','My Anime Ranking')||'My Anime Ranking';
+  try{
+    const data={
+      uid:currentUser.uid,
+      userName:currentUser.displayName||'Anonymous',
+      userPhoto:currentUser.photoURL||'',
+      name,status:'draft',shows,comparisonLog,calBounds,anchorStep,
+      anchorFavoriteId,anchorWorstId,
+      totalCmps:totalCmps||Math.ceil(shows.length*Math.log2(Math.max(shows.length,2))),
+      doneCmps,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if(_draftDocId){
+      await db.collection('drafts').doc(_draftDocId).set(data);
+    }else{
+      data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+      const ref=await db.collection('drafts').add(data);
+      _draftDocId=ref.id;
+    }
+    toast('✓ Progress saved! Resume from your Lists tab.');
+    exitRanking();
+  }catch(e){toast('Could not save: '+e.message);}
+}
+
+async function resumeDraft(docId){
+  try{
+    const snap=await db.collection('drafts').doc(docId).get();
+    if(!snap.exists){toast('Draft not found.');return;}
+    const d=snap.data();
+    _draftDocId=docId;
+    shows=(d.shows||[]).map(s=>({...s}));
+    calBounds=[...(d.calBounds||[])];
+    anchorFavoriteId=d.anchorFavoriteId||null;
+    anchorWorstId=d.anchorWorstId||null;
+    comparisonLog=[];
+    replayLog=[...(d.comparisonLog||[])];
+    totalCmps=d.totalCmps||Math.ceil(shows.length*Math.log2(Math.max(shows.length,2)));
+    doneCmps=0;nextCalAt=4;sortedList=[];comparisons=[];currentComparison=null;
+    enterRankingMode();
+    document.getElementById('headerTitle').textContent=d.name||'Ranking';
+    showRV('rv-compare');
+    document.getElementById('phaseLbl').textContent='Resuming…';
+    hideEl('calBlock');showEl('cmpBlock');
+    document.getElementById('cmpTitle').textContent='Which did you enjoy more?';
+    document.getElementById('cmpHint').textContent='Picking up where you left off…';
+    document.getElementById('vsA').textContent='';
+    document.getElementById('vsB').textContent='';
+    document.getElementById('progBar').style.width='0%';
+    runSort();
+  }catch(e){toast('Could not resume: '+e.message);}
+}
+
+async function loadDrafts(){
+  const section=document.getElementById('draftSection');
+  const list=document.getElementById('draftsList');
+  if(!currentUser){section.classList.add('hidden');return;}
+  try{
+    const snap=await db.collection('drafts').where('uid','==',currentUser.uid).limit(10).get();
+    if(snap.empty){section.classList.add('hidden');return;}
+    const docs=[...snap.docs].sort((a,b)=>{
+      const ta=a.data().updatedAt?.toMillis?.()||0;
+      const tb=b.data().updatedAt?.toMillis?.()||0;
+      return tb-ta;
+    });
+    section.classList.remove('hidden');
+    list.innerHTML='';
+    docs.forEach(doc=>{
+      const d=doc.data();
+      const pct=d.totalCmps?Math.min(99,Math.round((d.doneCmps/d.totalCmps)*100)):0;
+      const el=document.createElement('div');
+      el.className='list-card';
+      el.style.cssText='border-left:3px solid var(--accent);align-items:center;cursor:default';
+      el.innerHTML=`<div class="list-card-info">
+        <div class="list-card-title">${d.name||'Draft Ranking'}</div>
+        <div class="list-card-meta">${d.shows?.length||0} shows · ${pct}% done</div>
+        <div style="height:3px;background:var(--border);border-radius:2px;margin-top:6px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px"></div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;margin-left:8px;align-items:flex-end">
+        <button class="btn btn-accent btn-sm" onclick="event.stopPropagation();resumeDraft('${doc.id}')">Resume →</button>
+        <button onclick="event.stopPropagation();deleteDraft('${doc.id}')" style="font-size:.7rem;color:var(--muted);background:none;border:none;cursor:pointer;font-weight:600">Delete</button>
+      </div>`;
+      list.appendChild(el);
+    });
+  }catch(e){section.classList.add('hidden');}
+}
+
+async function deleteDraft(docId){
+  if(!confirm('Delete this draft ranking? This cannot be undone.'))return;
+  try{
+    await db.collection('drafts').doc(docId).delete();
+    toast('Draft deleted.');
+    loadDrafts();
+  }catch(e){toast('Could not delete draft.');}
+}
+
 // ─── Context menu ────────────────────────────────────────────
 let _ctxDocId=null, _ctxDocName='';
 
@@ -1644,7 +1778,7 @@ async function confirmDelete(){
     await db.collection('rankings').doc(_ctxDocId).delete();
     closeDeleteDialog();
     toast('Ranking deleted.');
-    loadMyLists();
+    if(currentView==='feed')loadFeed();else loadMyLists();
   }catch(e){toast('Could not delete: '+e.message);}
 }
 
